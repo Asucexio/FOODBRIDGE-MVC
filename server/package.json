@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
-    "check": "node --check app.js && node --check server.js && find config controllers middleware models routes services -name '*.js' -print0 | xargs -0 -n1 node --check"
+    "check": "node --check app.js && node --check server.js && node scripts/check.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",
