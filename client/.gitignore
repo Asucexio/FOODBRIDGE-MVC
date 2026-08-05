@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+.pnpm-store/
 
 # Next.js
 .next/
@@ -44,3 +45,6 @@ Thumbs.db
 
 # Turbo
 .turbo/
+
+# Misc
+*.local
