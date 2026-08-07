@@ -3,11 +3,9 @@ import { ColorThemeSwitcher } from "@/components/color-theme-switcher";
 import { ThemeVariables } from "@/components/theme-variables";
 import { ColorThemeProvider } from "@/hooks/color-theme-context";
 import { ThemeProvider } from "@/components/theme-provider";
-import { Aleo } from "next/font/google";
 import "./index.css";
 
-const aleo = Aleo({ subsets: ["latin"], variable: "--font-notio-aleo" });
-const notioSansFont =
+const foodBridgeSansFont =
   '-apple-system, BlinkMacSystemFont, "San Francisco", "Helvetica Neue", Helvetica, ui-sans-serif, sans-serif';
 const themeNames = ["basil", "forest", "sunny"];
 
@@ -16,7 +14,7 @@ const themeSwatches: Record<string, string> = {
   forest: "oklch(0.8348 0.1302 160.9080)",
   sunny: "oklch(0.713 0.1305 61.77)",
 };
-export default function NotioTemplateLayout({
+export default function FoodBridgeLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -24,12 +22,12 @@ export default function NotioTemplateLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${aleo.variable} min-h-screen bg-background text-foreground`}
-        style={{ fontFamily: notioSansFont }}
+        className="min-h-screen bg-background text-foreground"
+        style={{ fontFamily: foodBridgeSansFont }}
       >
         <div
-          className={`${aleo.variable} min-h-screen bg-background text-foreground`}
-          style={{ fontFamily: notioSansFont }}
+          className="min-h-screen bg-background text-foreground"
+          style={{ fontFamily: foodBridgeSansFont }}
         >
           <ThemeProvider
             attribute="class"

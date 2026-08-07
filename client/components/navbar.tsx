@@ -151,6 +151,7 @@ export default function Navbar() {
                   <Link
                     href={item.href}
                     className="flex flex-row items-center gap-1 py-2"
+                  
                     onClick={() => setIsOpen(false)}
                   >
                     <p className="text-sm font-medium">{item.label}</p>
@@ -176,6 +177,7 @@ export default function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
     </div>
   );
 }
