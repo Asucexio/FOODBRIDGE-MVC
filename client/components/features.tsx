@@ -1,54 +1,52 @@
 "use client";
 
 import { FeatureCardProps } from "@/types/components/feature";
-import { AudioLines, NotebookPen, Sparkle } from "lucide-react";
+import { HandHeart, PackageCheck, Route, ShieldCheck } from "lucide-react";
 import { motion } from "motion/react";
 import FeatureCard from "./feature-card";
-import ToolFeature from "./tool-feature";
-import TranscriptionFeature from "./transcription-feature";
+
 export default function Features() {
   const features: FeatureCardProps[] = [
     {
-      title: "Record your calls with ease",
+      title: "Post surplus in minutes",
       description:
-        "Crystal-clear audio capture with automatic transcription. Never worry about missing details again.",
-      icon: AudioLines,
+        "Add food details, pickup windows, photos, and safety notes so local partners can claim with confidence.",
+      icon: PackageCheck,
     },
     {
-      title: "Take notes as you talk",
+      title: "Match with trusted recipients",
       description:
-        "Add highlights, action items, and reminders without interrupting the flow of conversation.",
-      icon: NotebookPen,
+        "Approved shelters and nonprofits can find nearby donations, request claims, and coordinate handoffs quickly.",
+      icon: HandHeart,
     },
     {
-      title: "Find any call in seconds",
+      title: "Coordinate reliable pickup",
       description:
-        "Search transcripts, replay key moments, and export notes to your team—all in seconds.",
-      icon: Sparkle,
+        "Keep donors, drivers, and recipients aligned with clear statuses from available to claimed to completed.",
+      icon: Route,
     },
   ];
 
   return (
-    <div className="flex flex-col gap-8 items-center justify-center p-4">
-      <motion.h1
+    <section id="how-it-works" className="flex flex-col items-center justify-center gap-8 px-4 py-10 md:py-16">
+      <motion.div
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-100px" }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="text-3xl md:text-4xl 4xl:text-6xl font-aleo text-center"
+        className="max-w-3xl space-y-4 text-center"
       >
-        One app for all your conversations
-      </motion.h1>
-      <motion.p
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
-        className="text-lg text-center max-w-2xl text-muted-foreground 4xl:text-3xl 4xl:max-w-6xl"
-      >
-        Whether it&apos;s client meetings, interviews, or team calls—capture,
-        organize, and review every conversation in one place.
-      </motion.p>
+        <span className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-4 py-2 text-sm font-bold text-emerald-800 dark:bg-emerald-400/15 dark:text-emerald-100">
+          <ShieldCheck className="h-4 w-4" /> Built for accountable sharing
+        </span>
+        <h2 className="font-aleo text-3xl font-semibold tracking-tight md:text-5xl 4xl:text-6xl">
+          A clearer path from extra food to real impact
+        </h2>
+        <p className="text-lg leading-8 text-muted-foreground 4xl:text-3xl">
+          FoodBridge gives every participant the context they need to move fast, reduce waste, and serve more neighbors with dignity.
+        </p>
+      </motion.div>
+
       <section className="flex flex-wrap items-stretch justify-center gap-4 max-md:pt-8 md:gap-8">
         {features.map((feature, index) => (
           <motion.div
@@ -67,8 +65,6 @@ export default function Features() {
           </motion.div>
         ))}
       </section>
-      <ToolFeature />
-      <TranscriptionFeature />
-    </div>
+    </section>
   );
 }

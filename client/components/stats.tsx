@@ -5,63 +5,51 @@ import Counter from "@/components/counter";
 
 export default function Stats() {
   const stats: { value: number; suffix?: string; description: string }[] = [
-    { value: 500, suffix: "K+", description: "Daily Active Users" },
-    { value: 95, suffix: "%", description: "Transcription Accuracy" },
-    { value: 12, description: "Hours Saved Per Month" },
+    { value: 1200, suffix: "+", description: "Meals ready to reroute" },
+    { value: 85, suffix: "%", description: "Less coordination time" },
+    { value: 18, description: "Partner pickup zones" },
   ];
 
   return (
-    <div className="flex flex-col gap-4 md:gap-20 items-center justify-center py-6 lg:py-24 px-4 lg:px-2">
-      <motion.section
+    <section className="mx-auto flex w-full max-w-6xl flex-col items-center justify-center gap-10 px-4 py-10 lg:py-20">
+      <motion.div
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-100px" }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="space-y-4 text-center max-w-3xl 4xl:max-w-4xl"
+        className="max-w-3xl space-y-4 text-center 4xl:max-w-4xl"
       >
-        <h2 className="text-2xl md:text-5xl 4xl:text-6xl font-aleo tracking-tight">
-          Words + Context = Better Notes
+        <h2 className="font-aleo text-3xl font-semibold tracking-tight md:text-5xl 4xl:text-6xl">
+          Designed to make every donation count
         </h2>
-        <p className="text-muted-foreground text-base leading-relaxed 4xl:text-3xl">
-          Our users save an average of 2.5 hours every week—time better spent on
-          what actually moves the needle.
+        <p className="text-base leading-relaxed text-muted-foreground 4xl:text-3xl">
+          See what is available, who needs it, and where it is headed—without spreadsheets, phone tag, or missed pickup windows.
         </p>
-      </motion.section>
+      </motion.div>
 
-      <section className="flex flex-col md:flex-row items-center justify-center w-full max-w-4xl">
+      <div className="grid w-full gap-4 rounded-[2rem] border border-emerald-900/10 bg-white/70 p-4 shadow-xl shadow-emerald-950/5 backdrop-blur dark:border-white/10 dark:bg-white/5 md:grid-cols-3 md:p-6">
         {stats.map((stat, index) => (
-          <div
-            className="flex flex-col lg:flex-row items-center justify-center gap-4"
+          <motion.div
             key={stat.description}
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{
+              duration: 0.5,
+              delay: 0.1 + index * 0.15,
+              ease: "easeOut",
+            }}
+            className="rounded-3xl bg-gradient-to-br from-emerald-50 to-amber-50 p-6 text-center dark:from-emerald-950/50 dark:to-amber-950/30"
           >
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{
-                duration: 0.5,
-                delay: 0.1 + index * 0.15,
-                ease: "easeOut",
-              }}
-              className={`flex flex-col items-center justify-center px-0 md:px-4 py-4 md:py-6 md:py-0 w-full md:w-auto h-14 ${
-                index < stats.length - 1
-                  ? "md:border-r border-muted-foreground/20 dark:border-muted-foreground/40"
-                  : ""
-              }`}
-            >
-              <p className="text-4xl md:text-5xl 4xl:text-6xl tracking-tight mb-2 min-w-xs md:min-w-64 lg:min-w-xs text-center font-semibold">
-                <Counter value={stat.value} suffix={stat.suffix} />
-              </p>
-              <p className="text-center 4xl:text-2xl">
-                {stat.description}
-              </p>
-            </motion.div>
-            {index < stats.length - 1 && (
-              <div className="block md:hidden w-14 mx-auto my-4 mb-8 border-b dark:border-muted-foreground/20 border-muted-foreground/40" />
-            )}
-          </div>
+            <p className="mb-2 text-4xl font-semibold tracking-tight text-emerald-900 dark:text-emerald-50 md:text-5xl 4xl:text-6xl">
+              <Counter value={stat.value} suffix={stat.suffix} />
+            </p>
+            <p className="font-medium text-slate-600 dark:text-slate-300 4xl:text-2xl">
+              {stat.description}
+            </p>
+          </motion.div>
         ))}
-      </section>
-    </div>
+      </div>
+    </section>
   );
 }
