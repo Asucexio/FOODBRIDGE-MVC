@@ -14,14 +14,14 @@ export default function AuthPage() {
         <div className="flex flex-col gap-6">
           <Image
             src="/logo/notio-icon-black.svg"
-            alt="Notio"
+            alt="FoodBridge"
             width={32}
             height={32}
             className="dark:hidden"
           />
           <Image
             src="/logo/notio-icon-white.svg"
-            alt="Notio"
+            alt="FoodBridge"
             width={32}
             height={32}
             className="hidden dark:block"
@@ -29,10 +29,10 @@ export default function AuthPage() {
 
           <div className="flex flex-col gap-2">
             <h1 className="text-2xl font-semibold tracking-tight">
-              Create a Notio Account
+              Create a FoodBridge Account
             </h1>
             <p className="text-sm text-muted-foreground">
-              Welcome! Create an account to get started
+              Welcome! Create an account to coordinate food rescue
             </p>
           </div>
 
