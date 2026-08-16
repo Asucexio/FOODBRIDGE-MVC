@@ -8,20 +8,42 @@ const pickDonationFields = (body) => allowedFields.reduce((payload, field) => {
   return payload;
 }, {});
 
+const validateFutureDate = (dateString) => {
+  if (!dateString) return true;
+  const date = new Date(dateString);
+  return date > new Date();
+};
+
 const createDonation = async (supabase, donorId, body, file) => {
+  const payload = pickDonationFields(body);
+
+  if (payload.pickup_deadline && !validateFutureDate(payload.pickup_deadline)) {
+    const err = new Error('Pickup deadline must be in the future.');
+    err.status = 400;
+    throw err;
+  }
+
   const imageUrl = await uploadDonationImage(supabase, file);
   return donationModel.createDonation(supabase, {
-    ...pickDonationFields(body),
+    ...payload,
     donor_id: donorId,
     image_url: imageUrl || body.image_url || null
   });
 };
 
 const updateDonation = async (supabase, donationId, donorId, body, file) => {
+  const payload = pickDonationFields(body);
+
+  if (payload.pickup_deadline && !validateFutureDate(payload.pickup_deadline)) {
+    const err = new Error('Pickup deadline must be in the future.');
+    err.status = 400;
+    throw err;
+  }
+
   const imageUrl = await uploadDonationImage(supabase, file);
-  const updates = pickDonationFields(body);
-  if (imageUrl) updates.image_url = imageUrl;
-  return donationModel.updateDonation(supabase, donationId, donorId, updates);
+  if (imageUrl) payload.image_url = imageUrl;
+
+  return donationModel.updateDonation(supabase, donationId, donorId, payload);
 };
 
 module.exports = {
