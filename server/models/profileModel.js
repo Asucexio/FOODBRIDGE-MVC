@@ -12,4 +12,15 @@ const getProfileById = async (supabase, id) => {
   return data;
 };
 
-module.exports = { createProfile, getProfileById };
+const updateProfile = async (supabase, id, updates) => {
+  const { data, error } = await supabase
+    .from(TABLE)
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+};
+
+module.exports = { createProfile, getProfileById, updateProfile };

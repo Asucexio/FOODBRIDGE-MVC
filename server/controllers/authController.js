@@ -1,5 +1,5 @@
 const { createSupabaseClient } = require('../config/supabase');
-const { createProfile } = require('../models/profileModel');
+const { createProfile, updateProfile: updateProfileModel } = require('../models/profileModel');
 
 const register = async (req, res, next) => {
   try {
@@ -41,4 +41,19 @@ const login = async (req, res, next) => {
 
 const me = (req, res) => res.json({ user: req.user, profile: req.profile });
 
-module.exports = { register, login, me };
+const updateProfile = async (req, res, next) => {
+  try {
+    const { name, phone, address } = req.body;
+    const updates = {};
+    if (name !== undefined) updates.name = name;
+    if (phone !== undefined) updates.phone = phone;
+    if (address !== undefined) updates.address = address;
+
+    const profile = await updateProfileModel(req.supabase, req.user.id, updates);
+    return res.json({ success: true, profile });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+module.exports = { register, login, me, updateProfile };

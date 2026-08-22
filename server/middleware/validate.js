@@ -53,6 +53,13 @@ const schemas = {
       id: z.string().uuid('Invalid claim ID'),
     }),
   }),
+  updateProfile: z.object({
+    body: z.object({
+      name: z.string().min(2, 'Name must be at least 2 characters').max(100).optional(),
+      phone: z.string().max(20, 'Phone number must be at most 20 characters').optional(),
+      address: z.string().max(200, 'Address must be at most 200 characters').optional(),
+    }),
+  }),
 };
 
 module.exports = { validate, schemas };
