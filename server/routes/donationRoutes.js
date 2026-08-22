@@ -6,6 +6,7 @@ const { requireApprovedRecipient } = require('../middleware/approvedMiddleware')
 const { upload, handleMulterError } = require('../middleware/uploadMiddleware');
 const { uploadLimiter } = require('../middleware/rateLimiter');
 const { validateRequest } = require('../middleware/validateRequest');
+const { validate, schemas } = require('../middleware/validate');
 
 const router = express.Router();
 
@@ -32,9 +33,9 @@ const paginationValidation = [
 
 router.get('/browse', authenticate, requireApprovedRecipient, paginationValidation, donationController.browseDonations);
 router.get('/my-donations', authenticate, requireRole('donor'), paginationValidation, donationController.getMyDonations);
-router.get('/:id', authenticate, donationController.getDonationDetails);
+router.get('/:id', authenticate, validate(schemas.donationId), donationController.getDonationDetails);
 router.post('/', authenticate, requireRole('donor'), uploadLimiter, upload.single('image'), handleMulterError, donationValidation, donationController.createDonation);
-router.patch('/:id', authenticate, requireRole('donor'), uploadLimiter, upload.single('image'), handleMulterError, donationValidation, donationController.updateDonation);
-router.delete('/:id', authenticate, requireRole('donor'), donationController.deleteDonation);
+router.patch('/:id', authenticate, requireRole('donor'), uploadLimiter, upload.single('image'), handleMulterError, validate(schemas.donationId), donationValidation, donationController.updateDonation);
+router.delete('/:id', authenticate, requireRole('donor'), validate(schemas.donationId), donationController.deleteDonation);
 
 module.exports = router;

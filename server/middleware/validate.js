@@ -43,6 +43,11 @@ const schemas = {
       id: z.string().uuid('Invalid donation ID'),
     }),
   }),
+  claimDonation: z.object({
+    params: z.object({
+      donationId: z.string().uuid('Invalid donation ID'),
+    }),
+  }),
 };
 
 module.exports = { validate, schemas };
