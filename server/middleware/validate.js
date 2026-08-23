@@ -60,6 +60,11 @@ const schemas = {
       address: z.string().max(200, 'Address must be at most 200 characters').optional(),
     }),
   }),
+  changePassword: z.object({
+    body: z.object({
+      newPassword: z.string().min(6, 'New password must be at least 6 characters'),
+    }),
+  }),
 };
 
 module.exports = { validate, schemas };

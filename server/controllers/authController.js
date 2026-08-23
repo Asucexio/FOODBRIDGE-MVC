@@ -1,5 +1,5 @@
 const { createSupabaseClient } = require('../config/supabase');
-const { createProfile, updateProfile: updateProfileModel } = require('../models/profileModel');
+const { createProfile, getProfileById, updateProfile: updateProfileModel } = require('../models/profileModel');
 
 const register = async (req, res, next) => {
   try {
@@ -33,7 +33,15 @@ const login = async (req, res, next) => {
     const supabase = createSupabaseClient();
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
-    return res.json(data);
+
+    let profile = null;
+    try {
+      profile = await getProfileById(supabase, data.user.id);
+    } catch (profileErr) {
+      // Gracefully ignore profile fetch error if profile is missing
+    }
+
+    return res.json({ user: data.user, session: data.session, profile });
   } catch (error) {
     return next(error);
   }
@@ -49,6 +57,10 @@ const updateProfile = async (req, res, next) => {
     if (phone !== undefined) updates.phone = phone;
     if (address !== undefined) updates.address = address;
 
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ message: 'No valid profile fields provided for update.' });
+    }
+
     const profile = await updateProfileModel(req.supabase, req.user.id, updates);
     return res.json({ success: true, profile });
   } catch (error) {
@@ -56,4 +68,15 @@ const updateProfile = async (req, res, next) => {
   }
 };
 
-module.exports = { register, login, me, updateProfile };
+const changePassword = async (req, res, next) => {
+  try {
+    const { newPassword } = req.body;
+    const { data, error } = await req.supabase.auth.updateUser({ password: newPassword });
+    if (error) throw error;
+    return res.json({ success: true, message: 'Password updated successfully.', user: data.user });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+module.exports = { register, login, me, updateProfile, changePassword };
