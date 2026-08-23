@@ -6,6 +6,8 @@ export type Profile = {
   email: string;
   role: Role;
   approved: boolean;
+  phone?: string;
+  address?: string;
   created_at: string;
 };
 
@@ -20,6 +22,14 @@ export type Donation = {
   pickup_deadline: string;
   image_url: string | null;
   created_at: string;
+};
+
+export type Claim = {
+  id: string;
+  donation_id: string;
+  recipient_id: string;
+  created_at: string;
+  donations?: Donation;
 };
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
@@ -57,11 +67,21 @@ export const api = {
       body: JSON.stringify(payload)
     }),
   login: (payload: { email: string; password: string }) =>
-    request<{ session: { access_token: string } }>('/api/auth/login', {
+    request<{ session: { access_token: string }; profile?: Profile }>('/api/auth/login', {
       method: 'POST',
       body: JSON.stringify(payload)
     }),
   me: () => request<{ profile: Profile }>('/api/auth/me'),
+  updateProfile: (payload: { name?: string; phone?: string; address?: string }) =>
+    request<{ success: boolean; profile: Profile }>('/api/auth/profile', {
+      method: 'PATCH',
+      body: JSON.stringify(payload)
+    }),
+  changePassword: (payload: { newPassword: string }) =>
+    request<{ success: boolean; message: string }>('/api/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }),
   createDonation: (payload: FormData) => request<Donation>('/api/donations', { method: 'POST', body: payload }),
   browseDonations: () => request<Donation[]>('/api/donations/browse'),
   getDonation: (id: string) => request<Donation>(`/api/donations/${id}`),
@@ -71,5 +91,7 @@ export const api = {
   deleteDonation: (id: string) => request<void>(`/api/donations/${id}`, { method: 'DELETE' }),
   claimDonation: (id: string) => request<{ id: string; donation_id: string; recipient_id: string }>(`/api/claims/donations/${id}/claim`, {
     method: 'POST'
-  })
+  }),
+  myClaims: () => request<{ success: boolean; data: Claim[] }>('/api/claims/my-claims'),
+  cancelClaim: (id: string) => request<void>(`/api/claims/${id}`, { method: 'DELETE' })
 };

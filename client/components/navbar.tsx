@@ -16,6 +16,8 @@ export default function Navbar() {
     { label: "Browse", href: "/donations/browse" },
     { label: "Donate", href: "/donations/create" },
     { label: "Dashboard", href: "/donor-dashboard" },
+    { label: "My Claims", href: "/claims/my-claims" },
+    { label: "Profile", href: "/profile" },
   ];
 
   return (
