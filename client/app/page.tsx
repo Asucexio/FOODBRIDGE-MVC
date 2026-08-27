@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import Beam from "@/components/beam";
 import Features from "@/components/features";
 import Footer from "@/components/footer";
@@ -23,6 +25,21 @@ export default function Page() {
           <p className="mx-auto mt-4 max-w-2xl text-emerald-50/80">
             Start by browsing available donations or listing food your organization can safely share.
           </p>
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Link
+              href="/donations/browse"
+              className="inline-flex items-center justify-center rounded-full bg-amber-300 px-6 py-3 text-sm font-bold text-emerald-950 transition hover:bg-amber-200"
+            >
+              Browse donations
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+            <Link
+              href="/donations/create"
+              className="inline-flex items-center justify-center rounded-full border border-emerald-100/40 bg-white/10 px-6 py-3 text-sm font-bold text-white transition hover:bg-white/20"
+            >
+              Create donation
+            </Link>
+          </div>
         </div>
       </section>
       <Footer />
