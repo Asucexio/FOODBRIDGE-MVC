@@ -82,12 +82,32 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(payload)
     }),
-  createDonation: (payload: FormData) => request<Donation>('/api/donations', { method: 'POST', body: payload }),
-  browseDonations: () => request<Donation[]>('/api/donations/browse'),
-  getDonation: (id: string) => request<Donation>(`/api/donations/${id}`),
-  myDonations: () => request<Donation[]>('/api/donations/my-donations'),
-  updateDonation: (id: string, payload: Partial<Donation>) =>
-    request<Donation>(`/api/donations/${id}`, { method: 'PATCH', body: JSON.stringify(payload) }),
+  createDonation: async (payload: FormData) => {
+    const res = await request<{ success?: boolean; data?: Donation } & Donation>('/api/donations', {
+      method: 'POST',
+      body: payload
+    });
+    return (res.data ?? res) as Donation;
+  },
+  browseDonations: async () => {
+    const res = await request<{ success?: boolean; data?: Donation[] } | Donation[]>('/api/donations/browse');
+    return (Array.isArray(res) ? res : res.data ?? []) as Donation[];
+  },
+  getDonation: async (id: string) => {
+    const res = await request<{ success?: boolean; data?: Donation } & Donation>(`/api/donations/${id}`);
+    return (res.data ?? res) as Donation;
+  },
+  myDonations: async () => {
+    const res = await request<{ success?: boolean; data?: Donation[] } | Donation[]>('/api/donations/my-donations');
+    return (Array.isArray(res) ? res : res.data ?? []) as Donation[];
+  },
+  updateDonation: async (id: string, payload: FormData) => {
+    const res = await request<{ success?: boolean; data?: Donation } & Donation>(`/api/donations/${id}`, {
+      method: 'PATCH',
+      body: payload
+    });
+    return (res.data ?? res) as Donation;
+  },
   deleteDonation: (id: string) => request<void>(`/api/donations/${id}`, { method: 'DELETE' }),
   claimDonation: (id: string) => request<{ id: string; donation_id: string; recipient_id: string }>(`/api/claims/donations/${id}/claim`, {
     method: 'POST'
