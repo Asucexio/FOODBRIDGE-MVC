@@ -22,11 +22,17 @@ const getDeadlineLabel = (date: string) => {
   return `${daysRemaining}d left`;
 };
 
+const isExpiringSoon = (date: string) => {
+  const hoursRemaining = (new Date(date).getTime() - Date.now()) / (1000 * 60 * 60);
+  return !Number.isNaN(hoursRemaining) && hoursRemaining <= 24;
+};
+
 export default function BrowseDonationsPage() {
   const [donations, setDonations] = useState<Donation[]>([]);
   const [message, setMessage] = useState('Loading available donations...');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [urgentOnly, setUrgentOnly] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -51,6 +57,7 @@ export default function BrowseDonationsPage() {
 
     return donations.filter((donation) => {
       const matchesCategory = selectedCategory === 'all' || donation.category === selectedCategory;
+      const matchesUrgent = !urgentOnly || isExpiringSoon(donation.pickup_deadline);
       const searchableText = [
         donation.food_name,
         donation.description,
@@ -62,14 +69,15 @@ export default function BrowseDonationsPage() {
         .join(' ')
         .toLowerCase();
 
-      return matchesCategory && (!normalizedSearch || searchableText.includes(normalizedSearch));
+      return (
+        matchesCategory &&
+        matchesUrgent &&
+        (!normalizedSearch || searchableText.includes(normalizedSearch))
+      );
     });
-  }, [donations, searchTerm, selectedCategory]);
+  }, [donations, searchTerm, selectedCategory, urgentOnly]);
 
-  const expiringSoonCount = donations.filter((donation) => {
-    const hoursRemaining = (new Date(donation.pickup_deadline).getTime() - Date.now()) / (1000 * 60 * 60);
-    return hoursRemaining > 0 && hoursRemaining <= 24;
-  }).length;
+  const expiringSoonCount = donations.filter((donation) => isExpiringSoon(donation.pickup_deadline)).length;
 
   const showEmptyFilteredState = !message && donations.length > 0 && filteredDonations.length === 0;
 
@@ -92,10 +100,16 @@ export default function BrowseDonationsPage() {
             <strong>{categories.length}</strong>
             <span>categories</span>
           </div>
-          <div>
+          <button
+            type="button"
+            className={`recipient-stat-button ${urgentOnly ? 'active' : ''}`}
+            onClick={() => setUrgentOnly((current) => !current)}
+            aria-pressed={urgentOnly}
+            title={urgentOnly ? 'Show all donations' : 'Show only urgent pickups'}
+          >
             <strong>{expiringSoonCount}</strong>
             <span>urgent pickups</span>
-          </div>
+          </button>
         </div>
       </section>
 
@@ -118,10 +132,27 @@ export default function BrowseDonationsPage() {
             ))}
           </select>
         </label>
+        <label className="urgent-filter">
+          <span>Pickup urgency</span>
+          <button
+            type="button"
+            className={`urgent-toggle ${urgentOnly ? 'active' : ''}`}
+            onClick={() => setUrgentOnly((current) => !current)}
+            aria-pressed={urgentOnly}
+          >
+            {urgentOnly ? 'Expiring soon (on)' : 'Expiring soon'}
+          </button>
+        </label>
       </section>
 
       {message && <p className={`notice ${message.includes('Unable') || message.includes('pending') ? 'error' : ''}`}>{message}</p>}
-      {showEmptyFilteredState && <p className="notice">No donations match your current search. Try another keyword or category.</p>}
+      {showEmptyFilteredState && (
+        <p className="notice">
+          {urgentOnly
+            ? 'No urgent pickups match your filters. Turn off “Expiring soon” or try another category.'
+            : 'No donations match your current search. Try another keyword or category.'}
+        </p>
+      )}
 
       <section className="grid donation-grid">
         {filteredDonations.map((donation) => (
@@ -134,7 +165,9 @@ export default function BrowseDonationsPage() {
             <div className="donation-card-body">
               <div className="donation-card-head">
                 <span className="pill">{donation.category}</span>
-                <span className="deadline-pill">{getDeadlineLabel(donation.pickup_deadline)}</span>
+                <span className={`deadline-pill ${isExpiringSoon(donation.pickup_deadline) ? 'urgent' : ''}`}>
+                  {getDeadlineLabel(donation.pickup_deadline)}
+                </span>
               </div>
               <h2>{donation.food_name}</h2>
               <p>{donation.description || 'No description provided yet.'}</p>
