@@ -4,11 +4,12 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { api, Donation } from '../../../lib/api';
 
+type PickupWindow = 'all' | 'today' | 'tomorrow' | 'week';
 const formatDeadline = (date: string) =>
   new Intl.DateTimeFormat(undefined, {
     dateStyle: 'medium',
     timeStyle: 'short'
-  }).format(new Date(date));
+ }).format(new Date(date));
 
 const getDeadlineLabel = (date: string) => {
   const deadlineTime = new Date(date).getTime();
@@ -27,13 +28,46 @@ const isExpiringSoon = (date: string) => {
   return !Number.isNaN(hoursRemaining) && hoursRemaining <= 24;
 };
 
+
+const isWithinPickupWindow = (date: string, window: PickupWindow) => {
+  if (window === 'all') return true;
+
+  const deadline = new Date(date);
+  if (Number.isNaN(deadline.getTime())) return false;
+
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfTomorrow = new Date(startOfToday);
+  startOfTomorrow.setDate(startOfToday.getDate() + 1);
+  const startOfNextDay = new Date(startOfToday);
+  startOfNextDay.setDate(startOfToday.getDate() + 2);
+  const endOfWeek = new Date(startOfToday);
+  endOfWeek.setDate(startOfToday.getDate() + 7);
+
+  if (window === 'today') return deadline >= startOfToday && deadline < startOfTomorrow;
+  if (window === 'tomorrow') return deadline >= startOfTomorrow && deadline < startOfNextDay;
+
+  return deadline >= startOfToday && deadline < endOfWeek;
+};
+
 export default function BrowseDonationsPage() {
   const [donations, setDonations] = useState<Donation[]>([]);
   const [message, setMessage] = useState('Loading available donations...');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [urgentOnly, setUrgentOnly] = useState(false);
+  const [sortOrder, setSortOrder] = useState<'deadline' | 'newest'>('deadline');
+  const [pickupWindow, setPickupWindow] = useState<PickupWindow>('all');
 
+
+export default function BrowseDonationsPage() {
+  const [donations, setDonations] = useState<Donation[]>([]);
+  const [message, setMessage] = useState('Loading available donations...');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [urgentOnly, setUrgentOnly] = useState(false);
+  const [sortOrder, setSortOrder] = useState<'deadline' | 'newest'>('deadline');
+  const [pickupWindow, setPickupWindow] = useState<PickupWindow>('all');
   useEffect(() => {
     const load = async () => {
       try {
@@ -55,31 +89,54 @@ export default function BrowseDonationsPage() {
   const filteredDonations = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
 
-    return donations.filter((donation) => {
-      const matchesCategory = selectedCategory === 'all' || donation.category === selectedCategory;
-      const matchesUrgent = !urgentOnly || isExpiringSoon(donation.pickup_deadline);
-      const searchableText = [
-        donation.food_name,
-        donation.description,
-        donation.quantity,
-        donation.pickup_location,
-        donation.category
-      ]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase();
 
-      return (
-        matchesCategory &&
-        matchesUrgent &&
-        (!normalizedSearch || searchableText.includes(normalizedSearch))
-      );
-    });
-  }, [donations, searchTerm, selectedCategory, urgentOnly]);
+    return donations
+      .filter((donation) => {
+        const matchesCategory = selectedCategory === 'all' || donation.category === selectedCategory;
+        const matchesUrgent = !urgentOnly || isExpiringSoon(donation.pickup_deadline);
+        const matchesPickupWindow = isWithinPickupWindow(donation.pickup_deadline, pickupWindow);
+        const searchableText = [
+          donation.food_name,
+          donation.description,
+          donation.quantity,
+          donation.pickup_location,
+          donation.category
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+
+        return (
+          matchesCategory &&
+          matchesUrgent &&
+          matchesPickupWindow &&
+          (!normalizedSearch || searchableText.includes(normalizedSearch))
+        );
+      })
+      .sort((first, second) => {
+        const firstSortDate = sortOrder === 'deadline' ? first.pickup_deadline : first.created_at;
+        const secondSortDate = sortOrder === 'deadline' ? second.pickup_deadline : second.created_at;
+        const firstTime = new Date(firstSortDate).getTime();
+        const secondTime = new Date(secondSortDate).getTime();
+
+        if (Number.isNaN(firstTime) || Number.isNaN(secondTime)) return 0;
+
+        return sortOrder === 'deadline' ? firstTime - secondTime : secondTime - firstTime;
+      });
+  }, [donations, searchTerm, selectedCategory, urgentOnly, sortOrder, pickupWindow]);
 
   const expiringSoonCount = donations.filter((donation) => isExpiringSoon(donation.pickup_deadline)).length;
 
   const showEmptyFilteredState = !message && donations.length > 0 && filteredDonations.length === 0;
+  const hasActiveFilters = Boolean(searchTerm.trim()) || selectedCategory !== 'all' || urgentOnly || pickupWindow !== 'all';
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setSelectedCategory('all');
+    setUrgentOnly(false);
+    setPickupWindow('all');
+  };
+
 
   return (
     <main className="container recipient-page">
@@ -131,6 +188,29 @@ export default function BrowseDonationsPage() {
               <option key={category} value={category}>{category}</option>
             ))}
           </select>
+           <label>
+          Pickup window
+          <select value={pickupWindow} onChange={(event) => setPickupWindow(event.target.value as PickupWindow)}>
+            <option value="all">Any pickup window</option>
+            <option value="today">Due today</option>
+            <option value="tomorrow">Due tomorrow</option>
+            <option value="week">Due this week</option>
+          </select>
+        </label>
+        <label>
+          Sort by
+          <select value={sortOrder} onChange={(event) => setSortOrder(event.target.value as 'deadline' | 'newest')}>
+            <option value="deadline">Earliest pickup deadline</option>
+            <option value="newest">Newest donation</option>
+          </select>
+        </label>
+        </label>
+           <label>
+          Sort by
+          <select value={sortOrder} onChange={(event) => setSortOrder(event.target.value as 'deadline' | 'newest')}>
+            <option value="deadline">Earliest pickup deadline</option>
+            <option value="newest">Newest donation</option>
+          </select>
         </label>
         <label className="urgent-filter">
           <span>Pickup urgency</span>
@@ -144,13 +224,26 @@ export default function BrowseDonationsPage() {
           </button>
         </label>
       </section>
+            {!message && donations.length > 0 && (
+        <div className="results-summary" aria-live="polite">
+          <span>
+            Showing {filteredDonations.length} of {donations.length} donations
+            {hasActiveFilters ? ' after filters' : ''}.
+          </span>
+          {hasActiveFilters && (
+            <button type="button" className="text-button" onClick={clearFilters}>
+              Clear filters
+            </button>
+          )}
+        </div>
+      )}
 
       {message && <p className={`notice ${message.includes('Unable') || message.includes('pending') ? 'error' : ''}`}>{message}</p>}
       {showEmptyFilteredState && (
         <p className="notice">
           {urgentOnly
             ? 'No urgent pickups match your filters. Turn off “Expiring soon” or try another category.'
-            : 'No donations match your current search. Try another keyword or category.'}
+            : 'No donations match your current search.  filters. Try another keyword, category, or pickup window.'}
         </p>
       )}
 
