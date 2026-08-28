@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { api, Donation } from '../../../lib/api';
 
+type PickupWindow = 'all' | 'today' | 'tomorrow' | 'week';
 const formatDeadline = (date: string) =>
   new Intl.DateTimeFormat(undefined, {
     dateStyle: 'medium',
@@ -27,6 +28,28 @@ const isExpiringSoon = (date: string) => {
   return !Number.isNaN(hoursRemaining) && hoursRemaining <= 24;
 };
 
+
+const isWithinPickupWindow = (date: string, window: PickupWindow) => {
+  if (window === 'all') return true;
+
+  const deadline = new Date(date);
+  if (Number.isNaN(deadline.getTime())) return false;
+
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfTomorrow = new Date(startOfToday);
+  startOfTomorrow.setDate(startOfToday.getDate() + 1);
+  const startOfNextDay = new Date(startOfToday);
+  startOfNextDay.setDate(startOfToday.getDate() + 2);
+  const endOfWeek = new Date(startOfToday);
+  endOfWeek.setDate(startOfToday.getDate() + 7);
+
+  if (window === 'today') return deadline >= startOfToday && deadline < startOfTomorrow;
+  if (window === 'tomorrow') return deadline >= startOfTomorrow && deadline < startOfNextDay;
+
+  return deadline >= startOfToday && deadline < endOfWeek;
+};
+
 export default function BrowseDonationsPage() {
   const [donations, setDonations] = useState<Donation[]>([]);
   const [message, setMessage] = useState('Loading available donations...');
@@ -34,7 +57,17 @@ export default function BrowseDonationsPage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [urgentOnly, setUrgentOnly] = useState(false);
   const [sortOrder, setSortOrder] = useState<'deadline' | 'newest'>('deadline');
+  const [pickupWindow, setPickupWindow] = useState<PickupWindow>('all');
 
+
+export default function BrowseDonationsPage() {
+  const [donations, setDonations] = useState<Donation[]>([]);
+  const [message, setMessage] = useState('Loading available donations...');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [urgentOnly, setUrgentOnly] = useState(false);
+  const [sortOrder, setSortOrder] = useState<'deadline' | 'newest'>('deadline');
+  const [pickupWindow, setPickupWindow] = useState<PickupWindow>('all');
   useEffect(() => {
     const load = async () => {
       try {
@@ -56,10 +89,12 @@ export default function BrowseDonationsPage() {
   const filteredDonations = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
 
+
     return donations
       .filter((donation) => {
         const matchesCategory = selectedCategory === 'all' || donation.category === selectedCategory;
         const matchesUrgent = !urgentOnly || isExpiringSoon(donation.pickup_deadline);
+        const matchesPickupWindow = isWithinPickupWindow(donation.pickup_deadline, pickupWindow);
         const searchableText = [
           donation.food_name,
           donation.description,
@@ -74,6 +109,7 @@ export default function BrowseDonationsPage() {
         return (
           matchesCategory &&
           matchesUrgent &&
+          matchesPickupWindow &&
           (!normalizedSearch || searchableText.includes(normalizedSearch))
         );
       })
@@ -87,17 +123,18 @@ export default function BrowseDonationsPage() {
 
         return sortOrder === 'deadline' ? firstTime - secondTime : secondTime - firstTime;
       });
-  }, [donations, searchTerm, selectedCategory, urgentOnly, sortOrder]);
+  }, [donations, searchTerm, selectedCategory, urgentOnly, sortOrder, pickupWindow]);
 
   const expiringSoonCount = donations.filter((donation) => isExpiringSoon(donation.pickup_deadline)).length;
 
   const showEmptyFilteredState = !message && donations.length > 0 && filteredDonations.length === 0;
-  const hasActiveFilters = Boolean(searchTerm.trim()) || selectedCategory !== 'all' || urgentOnly;
+  const hasActiveFilters = Boolean(searchTerm.trim()) || selectedCategory !== 'all' || urgentOnly || pickupWindow !== 'all';
 
   const clearFilters = () => {
     setSearchTerm('');
     setSelectedCategory('all');
     setUrgentOnly(false);
+    setPickupWindow('all');
   };
 
 
@@ -151,6 +188,22 @@ export default function BrowseDonationsPage() {
               <option key={category} value={category}>{category}</option>
             ))}
           </select>
+           <label>
+          Pickup window
+          <select value={pickupWindow} onChange={(event) => setPickupWindow(event.target.value as PickupWindow)}>
+            <option value="all">Any pickup window</option>
+            <option value="today">Due today</option>
+            <option value="tomorrow">Due tomorrow</option>
+            <option value="week">Due this week</option>
+          </select>
+        </label>
+        <label>
+          Sort by
+          <select value={sortOrder} onChange={(event) => setSortOrder(event.target.value as 'deadline' | 'newest')}>
+            <option value="deadline">Earliest pickup deadline</option>
+            <option value="newest">Newest donation</option>
+          </select>
+        </label>
         </label>
            <label>
           Sort by
@@ -190,7 +243,7 @@ export default function BrowseDonationsPage() {
         <p className="notice">
           {urgentOnly
             ? 'No urgent pickups match your filters. Turn off “Expiring soon” or try another category.'
-            : 'No donations match your current search. Try another keyword or category.'}
+            : 'No donations match your current search.  filters. Try another keyword, category, or pickup window.'}
         </p>
       )}
 
