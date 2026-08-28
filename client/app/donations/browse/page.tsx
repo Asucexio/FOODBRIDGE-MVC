@@ -8,7 +8,7 @@ const formatDeadline = (date: string) =>
   new Intl.DateTimeFormat(undefined, {
     dateStyle: 'medium',
     timeStyle: 'short'
-  }).format(new Date(date));
+ }).format(new Date(date));
 
 const getDeadlineLabel = (date: string) => {
   const deadlineTime = new Date(date).getTime();
@@ -33,6 +33,7 @@ export default function BrowseDonationsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [urgentOnly, setUrgentOnly] = useState(false);
+  const [sortOrder, setSortOrder] = useState<'deadline' | 'newest'>('deadline');
 
   useEffect(() => {
     const load = async () => {
@@ -55,31 +56,50 @@ export default function BrowseDonationsPage() {
   const filteredDonations = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
 
-    return donations.filter((donation) => {
-      const matchesCategory = selectedCategory === 'all' || donation.category === selectedCategory;
-      const matchesUrgent = !urgentOnly || isExpiringSoon(donation.pickup_deadline);
-      const searchableText = [
-        donation.food_name,
-        donation.description,
-        donation.quantity,
-        donation.pickup_location,
-        donation.category
-      ]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase();
+    return donations
+      .filter((donation) => {
+        const matchesCategory = selectedCategory === 'all' || donation.category === selectedCategory;
+        const matchesUrgent = !urgentOnly || isExpiringSoon(donation.pickup_deadline);
+        const searchableText = [
+          donation.food_name,
+          donation.description,
+          donation.quantity,
+          donation.pickup_location,
+          donation.category
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
 
-      return (
-        matchesCategory &&
-        matchesUrgent &&
-        (!normalizedSearch || searchableText.includes(normalizedSearch))
-      );
-    });
-  }, [donations, searchTerm, selectedCategory, urgentOnly]);
+        return (
+          matchesCategory &&
+          matchesUrgent &&
+          (!normalizedSearch || searchableText.includes(normalizedSearch))
+        );
+      })
+      .sort((first, second) => {
+        const firstSortDate = sortOrder === 'deadline' ? first.pickup_deadline : first.created_at;
+        const secondSortDate = sortOrder === 'deadline' ? second.pickup_deadline : second.created_at;
+        const firstTime = new Date(firstSortDate).getTime();
+        const secondTime = new Date(secondSortDate).getTime();
+
+        if (Number.isNaN(firstTime) || Number.isNaN(secondTime)) return 0;
+
+        return sortOrder === 'deadline' ? firstTime - secondTime : secondTime - firstTime;
+      });
+  }, [donations, searchTerm, selectedCategory, urgentOnly, sortOrder]);
 
   const expiringSoonCount = donations.filter((donation) => isExpiringSoon(donation.pickup_deadline)).length;
 
   const showEmptyFilteredState = !message && donations.length > 0 && filteredDonations.length === 0;
+  const hasActiveFilters = Boolean(searchTerm.trim()) || selectedCategory !== 'all' || urgentOnly;
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setSelectedCategory('all');
+    setUrgentOnly(false);
+  };
+
 
   return (
     <main className="container recipient-page">
@@ -132,6 +152,13 @@ export default function BrowseDonationsPage() {
             ))}
           </select>
         </label>
+           <label>
+          Sort by
+          <select value={sortOrder} onChange={(event) => setSortOrder(event.target.value as 'deadline' | 'newest')}>
+            <option value="deadline">Earliest pickup deadline</option>
+            <option value="newest">Newest donation</option>
+          </select>
+        </label>
         <label className="urgent-filter">
           <span>Pickup urgency</span>
           <button
@@ -144,6 +171,19 @@ export default function BrowseDonationsPage() {
           </button>
         </label>
       </section>
+            {!message && donations.length > 0 && (
+        <div className="results-summary" aria-live="polite">
+          <span>
+            Showing {filteredDonations.length} of {donations.length} donations
+            {hasActiveFilters ? ' after filters' : ''}.
+          </span>
+          {hasActiveFilters && (
+            <button type="button" className="text-button" onClick={clearFilters}>
+              Clear filters
+            </button>
+          )}
+        </div>
+      )}
 
       {message && <p className={`notice ${message.includes('Unable') || message.includes('pending') ? 'error' : ''}`}>{message}</p>}
       {showEmptyFilteredState && (

@@ -1,4 +1,4 @@
-// File: C:\Users\hp\Documents\foodbridge\client\app\page.tsx
+// File: C:\Users\hp\FOODBRIDGE-MVC\client\app\page.tsx
 import * as entry from '../../../app/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
