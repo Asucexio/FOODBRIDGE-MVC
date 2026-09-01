@@ -58,22 +58,14 @@ export default function BrowseDonationsPage() {
   const [urgentOnly, setUrgentOnly] = useState(false);
   const [sortOrder, setSortOrder] = useState<'deadline' | 'newest'>('deadline');
   const [pickupWindow, setPickupWindow] = useState<PickupWindow>('all');
-
-
-export default function BrowseDonationsPage() {
-  const [donations, setDonations] = useState<Donation[]>([]);
-  const [message, setMessage] = useState('Loading available donations...');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [urgentOnly, setUrgentOnly] = useState(false);
-  const [sortOrder, setSortOrder] = useState<'deadline' | 'newest'>('deadline');
-  const [pickupWindow, setPickupWindow] = useState<PickupWindow>('all');
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   useEffect(() => {
     const load = async () => {
       try {
         const data = await api.browseDonations();
         setDonations(data);
         setMessage(data.length ? '' : 'No available donations right now.');
+        setSavedIds(new Set(api.getSavedDonations()));
       } catch (error) {
         setMessage(error instanceof Error ? error.message : 'Unable to load donations.');
       }
@@ -126,6 +118,7 @@ export default function BrowseDonationsPage() {
   }, [donations, searchTerm, selectedCategory, urgentOnly, sortOrder, pickupWindow]);
 
   const expiringSoonCount = donations.filter((donation) => isExpiringSoon(donation.pickup_deadline)).length;
+  const savedCount = donations.filter((donation) => savedIds.has(donation.id)).length;
 
   const showEmptyFilteredState = !message && donations.length > 0 && filteredDonations.length === 0;
   const hasActiveFilters = Boolean(searchTerm.trim()) || selectedCategory !== 'all' || urgentOnly || pickupWindow !== 'all';
@@ -135,6 +128,20 @@ export default function BrowseDonationsPage() {
     setSelectedCategory('all');
     setUrgentOnly(false);
     setPickupWindow('all');
+  };
+
+  const toggleSave = (id: string) => {
+    if (savedIds.has(id)) {
+      api.unsaveDonation(id);
+      setSavedIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(id);
+        return newSet;
+      });
+    } else {
+      api.saveDonation(id);
+      setSavedIds(prev => new Set(prev).add(id));
+    }
   };
 
 
@@ -167,6 +174,10 @@ export default function BrowseDonationsPage() {
             <strong>{expiringSoonCount}</strong>
             <span>urgent pickups</span>
           </button>
+          <Link href="/donations/saved" className="recipient-stat-button" title="View saved donations">
+            <strong>{savedCount}</strong>
+            <span>saved</span>
+          </Link>
         </div>
       </section>
 
@@ -188,7 +199,8 @@ export default function BrowseDonationsPage() {
               <option key={category} value={category}>{category}</option>
             ))}
           </select>
-           <label>
+        </label>
+        <label>
           Pickup window
           <select value={pickupWindow} onChange={(event) => setPickupWindow(event.target.value as PickupWindow)}>
             <option value="all">Any pickup window</option>
@@ -203,25 +215,6 @@ export default function BrowseDonationsPage() {
             <option value="deadline">Earliest pickup deadline</option>
             <option value="newest">Newest donation</option>
           </select>
-        </label>
-        </label>
-           <label>
-          Sort by
-          <select value={sortOrder} onChange={(event) => setSortOrder(event.target.value as 'deadline' | 'newest')}>
-            <option value="deadline">Earliest pickup deadline</option>
-            <option value="newest">Newest donation</option>
-          </select>
-        </label>
-        <label className="urgent-filter">
-          <span>Pickup urgency</span>
-          <button
-            type="button"
-            className={`urgent-toggle ${urgentOnly ? 'active' : ''}`}
-            onClick={() => setUrgentOnly((current) => !current)}
-            aria-pressed={urgentOnly}
-          >
-            {urgentOnly ? 'Expiring soon (on)' : 'Expiring soon'}
-          </button>
         </label>
       </section>
             {!message && donations.length > 0 && (
@@ -243,7 +236,7 @@ export default function BrowseDonationsPage() {
         <p className="notice">
           {urgentOnly
             ? 'No urgent pickups match your filters. Turn off “Expiring soon” or try another category.'
-            : 'No donations match your current search.  filters. Try another keyword, category, or pickup window.'}
+            : 'No donations match your current search. Try another keyword, category, or pickup window.'}
         </p>
       )}
 
@@ -258,6 +251,15 @@ export default function BrowseDonationsPage() {
             <div className="donation-card-body">
               <div className="donation-card-head">
                 <span className="pill">{donation.category}</span>
+                <button
+                  type="button"
+                  onClick={() => toggleSave(donation.id)}
+                  className="bookmark-button"
+                  title={savedIds.has(donation.id) ? 'Remove from saved' : 'Save for later'}
+                  aria-pressed={savedIds.has(donation.id)}
+                >
+                  {savedIds.has(donation.id) ? '♥' : '♡'}
+                </button>
                 <span className={`deadline-pill ${isExpiringSoon(donation.pickup_deadline) ? 'urgent' : ''}`}>
                   {getDeadlineLabel(donation.pickup_deadline)}
                 </span>
