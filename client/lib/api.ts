@@ -109,6 +109,27 @@ export const api = {
     return (res.data ?? res) as Donation;
   },
   deleteDonation: (id: string) => request<void>(`/api/donations/${id}`, { method: 'DELETE' }),
+  saveDonation: (id: string) => {
+    const saved = JSON.parse(localStorage.getItem('savedDonations') || '[]') as string[];
+    if (!saved.includes(id)) {
+      saved.push(id);
+      localStorage.setItem('savedDonations', JSON.stringify(saved));
+    }
+    return Promise.resolve();
+  },
+  unsaveDonation: (id: string) => {
+    const saved = JSON.parse(localStorage.getItem('savedDonations') || '[]') as string[];
+    const filtered = saved.filter(donationId => donationId !== id);
+    localStorage.setItem('savedDonations', JSON.stringify(filtered));
+    return Promise.resolve();
+  },
+  getSavedDonations: () => {
+    return JSON.parse(localStorage.getItem('savedDonations') || '[]') as string[];
+  },
+  isSaved: (id: string) => {
+    const saved = JSON.parse(localStorage.getItem('savedDonations') || '[]') as string[];
+    return saved.includes(id);
+  },
   claimDonation: (id: string) => request<{ id: string; donation_id: string; recipient_id: string }>(`/api/claims/donations/${id}/claim`, {
     method: 'POST'
   }),
