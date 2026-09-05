@@ -107,3 +107,13 @@ input, select, textarea, button { font: inherit; }
   .recipient-stats div, .recipient-stat-button { padding: 0.85rem; }
   .recipient-stats strong { font-size: 1.4rem; }
 }
+
+@media print {
+  nav, footer, .print\\:hidden {
+    display: none !important;
+  }
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+}
