@@ -40,11 +40,7 @@ function ToggleGroup({
       data-size={size}
       data-orientation={orientation}
       className={cn(
-<<<<<<< HEAD
-        "rounded-md data-[spacing='0']:data-[variant=outline]:shadow-xs group/toggle-group flex w-fit flex-row items-center gap-1 data-[orientation=vertical]:flex-col data-[orientation=vertical]:items-stretch",
-=======
         "rounded-md group/toggle-group flex w-fit flex-row items-center gap-1 data-[orientation=vertical]:flex-col data-[orientation=vertical]:items-stretch",
->>>>>>> eba1007 (feat: add impact analytics dashboard, milestone badges, and hub integration)
         className
       )}
       {...props}
