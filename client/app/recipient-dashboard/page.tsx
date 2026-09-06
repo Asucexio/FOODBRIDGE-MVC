@@ -18,9 +18,13 @@ import {
   CheckCircle2,
   Trash2,
   Package,
+  Award,
+  Sparkles,
+  Leaf,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { calculateImpact, ImpactMetrics } from "@/lib/impact";
 
 /* ─── helpers ─── */
 const getHoursRemaining = (deadline: string) => {
@@ -65,22 +69,22 @@ const quickActions = [
     accent: "from-sky-500 to-blue-600",
   },
   {
+    title: "Impact & Badges",
+    description:
+      "Track your meals rescued, CO2 avoided, and check your community milestone badges.",
+    href: "/impact",
+    cta: "View impact",
+    icon: Award,
+    accent: "from-amber-500 to-orange-600",
+  },
+  {
     title: "Saved Donations",
     description:
       "Your bookmarked donations waiting for the right moment. Save now, claim when ready.",
     href: "/donations/saved",
     cta: "View saved",
     icon: Bookmark,
-    accent: "from-amber-500 to-orange-600",
-  },
-  {
-    title: "My Profile",
-    description:
-      "Keep your contact details, phone, and address up to date so donors can reach you easily.",
-    href: "/profile",
-    cta: "Edit profile",
-    icon: User,
-    accent: "from-violet-500 to-purple-600",
+    accent: "from-purple-500 to-indigo-600",
   },
 ];
 
@@ -142,6 +146,9 @@ export default function RecipientDashboardPage() {
   const urgentCount = claims.filter(
     (c) => c.donations?.pickup_deadline && getHoursRemaining(c.donations.pickup_deadline) <= 24
   ).length;
+
+  const impactData = calculateImpact([], claims, "recipient");
+  const mealsRescued = impactData.metrics.mealsSaved;
 
   /* sort upcoming pickups: most urgent first */
   const upcomingPickups = [...claims]
@@ -209,14 +216,14 @@ export default function RecipientDashboardPage() {
                   "bg-emerald-700 text-white shadow-emerald-900/20",
               },
               {
-                label: "Saved",
-                value: savedCount,
-                icon: Bookmark,
+                label: "Meals Rescued",
+                value: mealsRescued,
+                icon: Leaf,
                 color:
                   "bg-amber-500 text-white shadow-amber-900/20",
               },
               {
-                label: "Urgent",
+                label: "Urgent (24h)",
                 value: urgentCount,
                 icon: AlertTriangle,
                 color:

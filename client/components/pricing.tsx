@@ -2,13 +2,17 @@
 import { motion } from "motion/react";
 import PricingCard from "./pricing-card";
 
+export interface PricingCardProps {
+  price: number;
+  features: string[];
+  isFree?: boolean;
+  slug: string;
+  buttonText?: string;
+  className?: string;
+}
+
 export default function Pricing() {
-  const pricings: {
-    price: number;
-    features: string[];
-    isFree?: boolean;
-    slug: string;
-  }[] = [
+  const pricings: PricingCardProps[] = [
     {
       price: 0,
       features: [

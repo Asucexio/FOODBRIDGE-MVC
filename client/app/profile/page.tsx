@@ -3,12 +3,15 @@
 import { useEffect, useState } from "react";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
-import { api, Profile } from "@/lib/api";
-import { User, KeyRound, Phone, MapPin, Mail, ShieldCheck, Clock, CheckCircle2, AlertCircle } from "lucide-react";
+import { api, Profile, Donation, Claim } from "@/lib/api";
+import { User, KeyRound, Phone, MapPin, Mail, ShieldCheck, Clock, CheckCircle2, AlertCircle, Award, Sparkles, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { calculateImpact, Badge } from "@/lib/impact";
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [badges, setBadges] = useState<Badge[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
@@ -39,6 +42,18 @@ export default function ProfilePage() {
         setName(res.profile.name || "");
         setPhone(res.profile.phone || "");
         setAddress(res.profile.address || "");
+
+        // Fetch donations/claims to compute badges
+        let donations: Donation[] = [];
+        let claims: Claim[] = [];
+        if (res.profile.role === "donor") {
+          donations = await api.myDonations().catch(() => []);
+        } else {
+          const claimsRes = await api.myClaims().catch(() => ({ data: [] }));
+          claims = claimsRes.data || [];
+        }
+        const impact = calculateImpact(donations, claims, res.profile.role);
+        setBadges(impact.badges);
       }
     } catch (err: any) {
       setProfileError("Failed to load user profile. Please log in.");
@@ -143,6 +158,47 @@ export default function ProfilePage() {
                 </div>
               </div>
             )}
+
+            {/* Badges & Impact Showcase */}
+            <div className="p-6 rounded-2xl border border-emerald-900/10 bg-card shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-4 pb-3 border-b border-border">
+                <div className="flex items-center gap-2">
+                  <Award className="h-5 w-5 text-amber-500" />
+                  <h3 className="text-lg font-semibold">Earned Badges & Achievements</h3>
+                </div>
+                <Link
+                  href="/impact"
+                  className="text-xs font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1 hover:underline"
+                >
+                  View Full Impact Hub <ChevronRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+                {badges.map((badge) => (
+                  <div
+                    key={badge.id}
+                    className={`flex items-center gap-3 p-3 rounded-xl border transition ${
+                      badge.unlocked
+                        ? "border-emerald-500/30 bg-emerald-50/30 dark:bg-emerald-950/20"
+                        : "border-slate-200 dark:border-white/5 opacity-60 grayscale"
+                    }`}
+                  >
+                    <span className="text-2xl">{badge.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold truncate">{badge.title}</p>
+                      <p className="text-[10px] text-muted-foreground truncate">{badge.description}</p>
+                      <div className="mt-1 h-1 w-full rounded-full bg-slate-200 dark:bg-white/10 overflow-hidden">
+                        <div
+                          className="h-full bg-emerald-600 rounded-full"
+                          style={{ width: `${badge.progress}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
 
             {/* Profile Details Form */}
             <div className="p-6 rounded-2xl border border-emerald-900/10 bg-card shadow-sm">
