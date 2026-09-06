@@ -21,10 +21,12 @@ import {
   Award,
   Sparkles,
   Leaf,
+  QrCode,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { calculateImpact, ImpactMetrics } from "@/lib/impact";
+import PickupPassModal from "@/components/pickup-pass-modal";
 
 /* ─── helpers ─── */
 const getHoursRemaining = (deadline: string) => {
@@ -95,6 +97,7 @@ export default function RecipientDashboardPage() {
   const [savedCount, setSavedCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [cancelingId, setCancelingId] = useState<string | null>(null);
+  const [selectedPassClaim, setSelectedPassClaim] = useState<Claim | null>(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -409,23 +412,32 @@ export default function RecipientDashboardPage() {
                       </div>
 
                       {/* actions */}
-                      <div className="mt-4 flex items-center justify-between gap-2 border-t border-slate-200 pt-4 dark:border-white/10">
-                        <Link
-                          href={`/donations/${d.id}`}
-                          className="text-sm font-bold text-emerald-700 transition hover:text-emerald-900 dark:text-emerald-400"
-                        >
-                          View Details →
-                        </Link>
+                      <div className="mt-4 flex flex-col gap-2 border-t border-slate-200 pt-4 dark:border-white/10">
                         <Button
-                          variant="destructive"
                           size="sm"
-                          disabled={cancelingId === claim.id}
-                          onClick={() => handleCancelClaim(claim.id)}
-                          className="flex items-center gap-1.5 rounded-full text-xs"
+                          onClick={() => setSelectedPassClaim(claim)}
+                          className="w-full bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs flex items-center justify-center gap-1.5 h-8 font-semibold"
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
-                          {cancelingId === claim.id ? "…" : "Cancel"}
+                          <QrCode className="h-3.5 w-3.5" /> View Pickup Pass & PIN
                         </Button>
+                        <div className="flex items-center justify-between">
+                          <Link
+                            href={`/donations/${d.id}`}
+                            className="text-xs font-bold text-emerald-700 transition hover:text-emerald-900 dark:text-emerald-400"
+                          >
+                            View Details →
+                          </Link>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            disabled={cancelingId === claim.id}
+                            onClick={() => handleCancelClaim(claim.id)}
+                            className="flex items-center gap-1 rounded-full text-[11px] h-7 px-3"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                            {cancelingId === claim.id ? "…" : "Cancel"}
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -435,6 +447,19 @@ export default function RecipientDashboardPage() {
           )}
         </div>
       </section>
+
+      {/* Pickup Pass Modal */}
+      {selectedPassClaim && (
+        <PickupPassModal
+          claimId={selectedPassClaim.id}
+          foodName={selectedPassClaim.donations?.food_name || "Food Donation"}
+          quantity={selectedPassClaim.donations?.quantity}
+          pickupLocation={selectedPassClaim.donations?.pickup_location}
+          pickupDeadline={selectedPassClaim.donations?.pickup_deadline}
+          isOpen={Boolean(selectedPassClaim)}
+          onClose={() => setSelectedPassClaim(null)}
+        />
+      )}
 
       <Footer />
     </main>

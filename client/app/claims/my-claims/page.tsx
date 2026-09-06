@@ -4,9 +4,11 @@ import { useEffect, useState } from "react";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
 import { api, Claim } from "@/lib/api";
-import { HeartHandshake, MapPin, Calendar, Clock, AlertCircle, CheckCircle2, Trash2 } from "lucide-react";
+import { HeartHandshake, MapPin, Calendar, Clock, AlertCircle, CheckCircle2, Trash2, QrCode, ShieldCheck, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import PickupPassModal from "@/components/pickup-pass-modal";
+import { isHandoverCompleted } from "@/lib/verification";
 
 export default function MyClaimsPage() {
   const [claims, setClaims] = useState<Claim[]>([]);
@@ -14,6 +16,7 @@ export default function MyClaimsPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [cancelingId, setCancelingId] = useState<string | null>(null);
+  const [selectedPassClaim, setSelectedPassClaim] = useState<Claim | null>(null);
 
   useEffect(() => {
     fetchClaims();
@@ -62,7 +65,7 @@ export default function MyClaimsPage() {
               My Claimed Donations
             </h1>
             <p className="text-muted-foreground mt-1">
-              View and manage food donations you have reserved for pickup.
+              View, present pickup passes with QR codes, and manage food donations reserved for your community.
             </p>
           </div>
           <Link href="/donations/browse">
@@ -107,6 +110,8 @@ export default function MyClaimsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {claims.map((claim) => {
               const donation = claim.donations;
+              const isCompleted = isHandoverCompleted(claim.id);
+
               return (
                 <div
                   key={claim.id}
@@ -164,19 +169,36 @@ export default function MyClaimsPage() {
                       </div>
                     </div>
 
-                    <div className="pt-3 border-t border-border flex items-center justify-between">
-                      <span className="text-xs font-medium text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
-                        <CheckCircle2 className="h-3.5 w-3.5" /> Ready for pickup
-                      </span>
+                    <div className="pt-3 border-t border-border space-y-3">
+                      <div className="flex items-center justify-between">
+                        {isCompleted ? (
+                          <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
+                            <CheckCircle2 className="h-4 w-4" /> Handover Completed
+                          </span>
+                        ) : (
+                          <span className="text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                            <Clock className="h-3.5 w-3.5 text-amber-500" /> Awaiting Pickup
+                          </span>
+                        )}
+
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          disabled={cancelingId === claim.id}
+                          onClick={() => handleCancelClaim(claim.id)}
+                          className="flex items-center gap-1.5 text-xs h-8"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          {cancelingId === claim.id ? "Canceling..." : "Cancel"}
+                        </Button>
+                      </div>
+
+                      {/* Pickup Pass & QR Action */}
                       <Button
-                        variant="destructive"
-                        size="sm"
-                        disabled={cancelingId === claim.id}
-                        onClick={() => handleCancelClaim(claim.id)}
-                        className="flex items-center gap-1.5"
+                        onClick={() => setSelectedPassClaim(claim)}
+                        className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-xs py-2 flex items-center justify-center gap-2 rounded-xl"
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
-                        {cancelingId === claim.id ? "Canceling..." : "Cancel Claim"}
+                        <QrCode className="h-4 w-4" /> View Pickup Pass & QR PIN
                       </Button>
                     </div>
                   </div>
@@ -184,6 +206,19 @@ export default function MyClaimsPage() {
               );
             })}
           </div>
+        )}
+
+        {/* Pickup Pass Modal */}
+        {selectedPassClaim && (
+          <PickupPassModal
+            claimId={selectedPassClaim.id}
+            foodName={selectedPassClaim.donations?.food_name || "Food Donation"}
+            quantity={selectedPassClaim.donations?.quantity}
+            pickupLocation={selectedPassClaim.donations?.pickup_location}
+            pickupDeadline={selectedPassClaim.donations?.pickup_deadline}
+            isOpen={Boolean(selectedPassClaim)}
+            onClose={() => setSelectedPassClaim(null)}
+          />
         )}
       </main>
       <Footer />
