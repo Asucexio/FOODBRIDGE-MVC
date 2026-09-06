@@ -2,6 +2,15 @@
 import { motion } from "motion/react";
 import TestimonialCard from "./testimonial-card";
 
+export interface TestimonialProps {
+  logo?: string;
+  quote: string;
+  author: string;
+  role: string;
+  avatarSrc: string;
+  className?: string;
+}
+
 export default function Testimonial() {
   return (
     <div className="pt-30 pb-12 lg:pt-54 px-4 max-w-6xl 4xl:max-w-[90rem] mx-auto flex flex-col gap-12">
