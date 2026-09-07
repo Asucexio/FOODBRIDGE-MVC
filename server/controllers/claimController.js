@@ -1,4 +1,6 @@
 const claimService = require('../services/claimService');
+const donationService = require('../services/donationService');
+const notificationService = require('../services/notificationService');
 
 const parsePagination = (query) => ({
   page: parseInt(query.page, 10) || 1,
@@ -8,6 +10,36 @@ const parsePagination = (query) => ({
 const claimDonation = async (req, res, next) => {
   try {
     const claim = await claimService.claimDonation(req.supabase, req.params.donationId, req.user.id);
+    
+    // Asynchronously create notifications for donor and recipient
+    (async () => {
+      try {
+        const donation = await donationService.getDonationById(req.supabase, req.params.donationId);
+        if (donation) {
+          if (donation.donor_id) {
+            await notificationService.createNotification(req.supabase, {
+              user_id: donation.donor_id,
+              title: 'Donation Claimed! 🎉',
+              message: `Your donation "${donation.food_name}" was claimed. Prepare for pickup!`,
+              type: 'claim',
+              link: '/donor-dashboard',
+              metadata: { donationId: donation.id, claimId: claim.id },
+            });
+          }
+          await notificationService.createNotification(req.supabase, {
+            user_id: req.user.id,
+            title: 'Claim Confirmed ✅',
+            message: `You successfully claimed "${donation.food_name}". View your pickup pass.`,
+            type: 'claim',
+            link: '/claims/my-claims',
+            metadata: { donationId: donation.id, claimId: claim.id },
+          });
+        }
+      } catch (err) {
+        console.warn('Failed to send claim notification:', err.message);
+      }
+    })();
+
     return res.status(201).json({ success: true, data: claim });
   } catch (error) {
     if (error.code === '23505') {
@@ -36,4 +68,4 @@ const cancelClaim = async (req, res, next) => {
   }
 };
 
-module.exports = { claimDonation, getMyClaims, cancelClaim };
+module.exports = { claimDonation, getMyClaims, cancelClaim };
