@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./theme-toggle";
+import { NotificationBell } from "./notification-bell";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -15,8 +16,6 @@ export default function Navbar() {
   const navItems: { label: string; href: string }[] = [
     { label: "Browse", href: "/donations/browse" },
     { label: "Saved", href: "/donations/saved" },
-    { label: "Impact", href: "/impact" },
-    { label: "Donate", href: "/donations/create" },
     { label: "Impact", href: "/impact" },
     { label: "Donor Hub", href: "/donor-dashboard" },
     { label: "Recipient Hub", href: "/recipient-dashboard" },
@@ -40,7 +39,7 @@ export default function Navbar() {
           </Link>
         </motion.div>
 
-        <div className="hidden md:flex flex-row items-center gap-4 4xl:gap-8">
+        <div className="hidden md:flex flex-row items-center gap-3 lg:gap-4">
           {navItems.map((item, index) => (
             <motion.div
               key={item.label}
@@ -49,45 +48,49 @@ export default function Navbar() {
               transition={{
                 duration: 0.4,
                 ease: "easeOut",
-                delay: 0.1 + index * 0.1,
+                delay: 0.05 + index * 0.05,
               }}
             >
               <Link
                 href={item.href}
-                className="flex flex-row items-center gap-1 rounded-full px-3 py-2 text-muted-foreground transition hover:bg-emerald-50 hover:text-emerald-800 dark:hover:bg-white/10 dark:hover:text-white"
+                className="flex flex-row items-center gap-1 rounded-full px-2.5 py-1.5 text-muted-foreground transition hover:bg-emerald-50 hover:text-emerald-800 dark:hover:bg-white/10 dark:hover:text-white"
               >
-                <p className="text-sm font-medium 4xl:text-2xl">{item.label}</p>
+                <p className="text-sm font-medium">{item.label}</p>
               </Link>
             </motion.div>
           ))}
+
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{
               duration: 0.4,
               ease: "easeOut",
-              delay: 0.1 + navItems.length * 0.1,
+              delay: 0.1 + navItems.length * 0.05,
             }}
           >
-            <Button variant="ghost" className="4xl:text-2xl" size={"sm"}>
+            <Button variant="ghost" size="sm">
               <Link href={authPath}>Log In</Link>
             </Button>
           </motion.div>
+
+          <NotificationBell />
           <ThemeToggle />
+
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{
               duration: 0.4,
               ease: "easeOut",
-              delay: 0.2 + navItems.length * 0.1,
+              delay: 0.15 + navItems.length * 0.05,
             }}
           >
             <Button
               variant="default"
-              className="4xl:text-2xl 4xl:h-16 4xl:px-8"
+              size="sm"
             >
-              <Link href="/donations/create">Create donation</Link>
+              <Link href="/donations/create">Donate</Link>
             </Button>
           </motion.div>
         </div>
@@ -96,8 +99,9 @@ export default function Navbar() {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="md:hidden"
+          className="md:hidden flex items-center gap-2"
         >
+          <NotificationBell />
           <Button
             variant="ghost"
             className="p-2"
@@ -140,50 +144,52 @@ export default function Navbar() {
               className="md:hidden overflow-hidden"
             >
               <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2, delay: 0.1 }}
-              className="flex flex-col gap-4 py-4"
-            >
-              {navItems.map((item, index) => (
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2, delay: 0.1 }}
+                className="flex flex-col gap-3 py-4"
+              >
+                {navItems.map((item, index) => (
+                  <motion.div
+                    key={item.label}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.2, delay: index * 0.05 }}
+                  >
+                    <Link
+                      href={item.href}
+                      className="flex flex-row items-center gap-1 py-1.5"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <p className="text-sm font-medium">{item.label}</p>
+                    </Link>
+                  </motion.div>
+                ))}
                 <motion.div
-                  key={item.label}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.2, delay: index * 0.1 }}
+                  transition={{ duration: 0.2, delay: navItems.length * 0.05 }}
+                  className="flex flex-col gap-2 pt-2"
                 >
-                  <Link
-                    href={item.href}
-                    className="flex flex-row items-center gap-1 py-2"
-                  
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <p className="text-sm font-medium">{item.label}</p>
-                  </Link>
+                  <div className="flex items-center justify-between py-1">
+                    <span className="text-sm text-muted-foreground">Theme</span>
+                    <ThemeToggle />
+                  </div>
+                  <Button variant="ghost" className="w-full">
+                    <Link href={authPath}>Log In</Link>
+                  </Button>
+                  <Button variant="default" className="w-full">
+                    <Link href="/donations/create">Donate</Link>
+                  </Button>
                 </motion.div>
-              ))}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.2, delay: navItems.length * 0.1 }}
-                className="flex flex-col gap-2 pt-2"
-              >
-                <ThemeToggle />
-                <Button variant="ghost" className="w-full">
-                  <Link href={authPath}>Log In</Link>
-                </Button>
-                <Button variant="default" className="w-full">
-                  <Link href="/donations/create">Create donation</Link>
-                </Button>
               </motion.div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
-}
+}
