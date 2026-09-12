@@ -3,15 +3,18 @@
 import { useEffect, useState } from "react";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
-import { api, Profile, Donation, Claim } from "@/lib/api";
-import { User, KeyRound, Phone, MapPin, Mail, ShieldCheck, Clock, CheckCircle2, AlertCircle, Award, Sparkles, ChevronRight } from "lucide-react";
+import { api, Profile, Donation, Claim, Review, RatingSummary } from "@/lib/api";
+import { User, KeyRound, Phone, MapPin, Mail, ShieldCheck, Clock, CheckCircle2, AlertCircle, Award, Sparkles, ChevronRight, Star, MessageSquare, ThumbsUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { calculateImpact, Badge } from "@/lib/impact";
+import { UserRatingBadge } from "@/components/user-rating-badge";
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [badges, setBadges] = useState<Badge[]>([]);
+  const [ratingSummary, setRatingSummary] = useState<RatingSummary | null>(null);
+  const [userReviews, setUserReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
@@ -54,6 +57,14 @@ export default function ProfilePage() {
         }
         const impact = calculateImpact(donations, claims, res.profile.role);
         setBadges(impact.badges);
+
+        // Fetch rating summary and reviews
+        const [sum, revs] = await Promise.all([
+          api.getUserRatingSummary(res.profile.id).catch(() => null),
+          api.getUserReviews(res.profile.id).catch(() => ({ data: [] })),
+        ]);
+        if (sum) setRatingSummary(sum);
+        if (revs?.data) setUserReviews(revs.data);
       }
     } catch (err: any) {
       setProfileError("Failed to load user profile. Please log in.");
@@ -198,6 +209,88 @@ export default function ProfilePage() {
                   </div>
                 ))}
               </div>
+            </div>
+
+            {/* Trust Score & Reviews Received */}
+            <div className="p-6 rounded-2xl border border-emerald-900/10 bg-card shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-4 pb-3 border-b border-border">
+                <div className="flex items-center gap-2">
+                  <Star className="h-5 w-5 text-amber-500 fill-amber-400" />
+                  <h3 className="text-lg font-semibold">Community Trust & Handover Reviews</h3>
+                </div>
+                <Link
+                  href="/reviews"
+                  className="text-xs font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1 hover:underline"
+                >
+                  Explore Reviews Hub <ChevronRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+
+              {ratingSummary && (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                  <div className="p-4 rounded-xl bg-muted/30 border border-border/50 flex flex-col justify-center">
+                    <span className="text-xs text-muted-foreground font-medium">Average Rating</span>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-2xl font-bold">{ratingSummary.averageRating.toFixed(1)}</span>
+                      <UserRatingBadge rating={ratingSummary.averageRating} showCount={false} size="sm" />
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-muted/30 border border-border/50 flex flex-col justify-center">
+                    <span className="text-xs text-muted-foreground font-medium">Trust Score</span>
+                    <div className="flex items-center gap-2 mt-1">
+                      <ShieldCheck className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                      <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                        {ratingSummary.trustScore}%
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-muted/30 border border-border/50 flex flex-col justify-center">
+                    <span className="text-xs text-muted-foreground font-medium">Verified Reviews</span>
+                    <span className="text-2xl font-bold mt-1">{ratingSummary.totalReviews}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Reviews List */}
+              {userReviews.length > 0 ? (
+                <div className="space-y-3">
+                  <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground block">
+                    Recent Feedback
+                  </span>
+                  {userReviews.slice(0, 3).map((review) => (
+                    <div
+                      key={review.id}
+                      className="p-3.5 rounded-xl border border-border/60 bg-muted/20 space-y-2 text-xs"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-foreground">{review.author_name}</span>
+                        <UserRatingBadge rating={review.rating} showCount={false} size="sm" />
+                      </div>
+                      {review.comment && (
+                        <p className="text-muted-foreground italic">"{review.comment}"</p>
+                      )}
+                      {review.tags && review.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {review.tags.map((tag) => (
+                            <span
+                              key={tag}
+                              className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 text-[10px] font-medium"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground text-center py-4 bg-muted/20 rounded-xl border border-dashed border-border">
+                  No direct handover reviews yet. Complete pickups to build your trust score!
+                </p>
+              )}
             </div>
 
             {/* Profile Details Form */}
