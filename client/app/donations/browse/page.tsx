@@ -3,8 +3,24 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { api, Donation } from '../../../lib/api';
+import dynamic from 'next/dynamic';
+import { Map, LayoutGrid, Columns, Clock } from 'lucide-react';
+
+const InteractiveFoodMap = dynamic(() => import('@/components/interactive-food-map'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-[550px] w-full flex-col items-center justify-center rounded-[2.5rem] border border-slate-200 bg-slate-100/50 dark:border-white/10 dark:bg-slate-900/50">
+      <Clock className="h-8 w-8 animate-spin text-emerald-600" />
+      <p className="mt-3 text-sm font-semibold text-slate-600 dark:text-slate-400">
+        Loading Map View…
+      </p>
+    </div>
+  ),
+});
 
 type PickupWindow = 'all' | 'today' | 'tomorrow' | 'week';
+type ViewMode = 'grid' | 'map' | 'split';
+
 const formatDeadline = (date: string) =>
   new Intl.DateTimeFormat(undefined, {
     dateStyle: 'medium',
@@ -27,7 +43,6 @@ const isExpiringSoon = (date: string) => {
   const hoursRemaining = (new Date(date).getTime() - Date.now()) / (1000 * 60 * 60);
   return !Number.isNaN(hoursRemaining) && hoursRemaining <= 24;
 };
-
 
 const isWithinPickupWindow = (date: string, window: PickupWindow) => {
   if (window === 'all') return true;
@@ -59,6 +74,9 @@ export default function BrowseDonationsPage() {
   const [sortOrder, setSortOrder] = useState<'deadline' | 'newest'>('deadline');
   const [pickupWindow, setPickupWindow] = useState<PickupWindow>('all');
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [selectedDonationId, setSelectedDonationId] = useState<string | null>(null);
+
   useEffect(() => {
     const load = async () => {
       try {
@@ -80,7 +98,6 @@ export default function BrowseDonationsPage() {
 
   const filteredDonations = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
-
 
     return donations
       .filter((donation) => {
@@ -144,7 +161,6 @@ export default function BrowseDonationsPage() {
     }
   };
 
-
   return (
     <main className="container recipient-page">
       <section className="recipient-hero card">
@@ -152,7 +168,7 @@ export default function BrowseDonationsPage() {
           <span className="eyebrow">Recipient dashboard</span>
           <h1>Find food donations ready for pickup</h1>
           <p>
-            Search local listings, review pickup windows, and claim the donation that best matches your community needs.
+            Search local listings, review pickup windows, and explore locations on our live OpenStreetMap.
           </p>
         </div>
         <div className="recipient-stats" aria-label="Donation overview">
@@ -178,9 +194,14 @@ export default function BrowseDonationsPage() {
             <strong>{savedCount}</strong>
             <span>saved</span>
           </Link>
+          <Link href="/map" className="recipient-stat-button" title="Open Full Screen Map">
+            <strong>🗺️</strong>
+            <span>open map</span>
+          </Link>
         </div>
       </section>
 
+      {/* View Switcher & Toolbar */}
       <section className="browse-toolbar card" aria-label="Filter donations">
         <label>
           Search donations
@@ -216,8 +237,73 @@ export default function BrowseDonationsPage() {
             <option value="newest">Newest donation</option>
           </select>
         </label>
+
+        {/* View Mode Toggle Button Group */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+          <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>View Mode</span>
+          <div style={{ display: 'inline-flex', background: 'var(--muted, #f1f5f9)', padding: '0.25rem', borderRadius: '0.75rem', gap: '0.25rem' }}>
+            <button
+              type="button"
+              onClick={() => setViewMode('grid')}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                padding: '0.35rem 0.75rem',
+                borderRadius: '0.5rem',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                border: 'none',
+                cursor: 'pointer',
+                background: viewMode === 'grid' ? 'var(--card, #ffffff)' : 'transparent',
+                boxShadow: viewMode === 'grid' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+              }}
+            >
+              <LayoutGrid size={14} /> Grid
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('split')}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                padding: '0.35rem 0.75rem',
+                borderRadius: '0.5rem',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                border: 'none',
+                cursor: 'pointer',
+                background: viewMode === 'split' ? 'var(--card, #ffffff)' : 'transparent',
+                boxShadow: viewMode === 'split' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+              }}
+            >
+              <Columns size={14} /> Split
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('map')}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                padding: '0.35rem 0.75rem',
+                borderRadius: '0.5rem',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                border: 'none',
+                cursor: 'pointer',
+                background: viewMode === 'map' ? 'var(--card, #ffffff)' : 'transparent',
+                boxShadow: viewMode === 'map' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+              }}
+            >
+              <Map size={14} /> Map
+            </button>
+          </div>
+        </div>
       </section>
-            {!message && donations.length > 0 && (
+
+      {!message && donations.length > 0 && (
         <div className="results-summary" aria-live="polite">
           <span>
             Showing {filteredDonations.length} of {donations.length} donations
@@ -240,51 +326,103 @@ export default function BrowseDonationsPage() {
         </p>
       )}
 
-      <section className="grid donation-grid">
-        {filteredDonations.map((donation) => (
-          <article className="card donation-card" key={donation.id}>
-            {donation.image_url ? (
-              <img className="image donation-image" src={donation.image_url} alt={donation.food_name} />
-            ) : (
-              <div className="donation-image image-placeholder" aria-hidden="true">FoodBridge</div>
-            )}
-            <div className="donation-card-body">
-              <div className="donation-card-head">
-                <span className="pill">{donation.category}</span>
-                <button
-                  type="button"
-                  onClick={() => toggleSave(donation.id)}
-                  className="bookmark-button"
-                  title={savedIds.has(donation.id) ? 'Remove from saved' : 'Save for later'}
-                  aria-pressed={savedIds.has(donation.id)}
-                >
-                  {savedIds.has(donation.id) ? '♥' : '♡'}
-                </button>
-                <span className={`deadline-pill ${isExpiringSoon(donation.pickup_deadline) ? 'urgent' : ''}`}>
-                  {getDeadlineLabel(donation.pickup_deadline)}
-                </span>
+      {/* Render based on View Mode */}
+      {viewMode === 'map' && (
+        <div style={{ margin: '1.5rem 0' }}>
+          <InteractiveFoodMap
+            donations={filteredDonations}
+            onSelectDonation={(d) => setSelectedDonationId(d.id)}
+            selectedDonationId={selectedDonationId}
+            className="h-[620px] w-full"
+          />
+        </div>
+      )}
+
+      {viewMode === 'split' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem', margin: '1.5rem 0' }}>
+          <div>
+            <InteractiveFoodMap
+              donations={filteredDonations}
+              onSelectDonation={(d) => setSelectedDonationId(d.id)}
+              selectedDonationId={selectedDonationId}
+              className="h-[650px] w-full"
+            />
+          </div>
+          <div style={{ maxHeight: '650px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', paddingRight: '0.5rem' }}>
+            {filteredDonations.map((donation) => (
+              <article
+                className={`card donation-card ${selectedDonationId === donation.id ? 'active-highlight' : ''}`}
+                key={donation.id}
+                onClick={() => setSelectedDonationId(donation.id)}
+                style={{ cursor: 'pointer' }}
+              >
+                <div className="donation-card-body">
+                  <div className="donation-card-head">
+                    <span className="pill">{donation.category}</span>
+                    <span className={`deadline-pill ${isExpiringSoon(donation.pickup_deadline) ? 'urgent' : ''}`}>
+                      {getDeadlineLabel(donation.pickup_deadline)}
+                    </span>
+                  </div>
+                  <h3>{donation.food_name}</h3>
+                  <p style={{ fontSize: '0.85rem' }}>📍 {donation.pickup_location}</p>
+                  <Link className="button" href={`/donations/${donation.id}`} style={{ marginTop: '0.5rem' }}>
+                    View & Claim
+                  </Link>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {viewMode === 'grid' && (
+        <section className="grid donation-grid">
+          {filteredDonations.map((donation) => (
+            <article className="card donation-card" key={donation.id}>
+              {donation.image_url ? (
+                <img className="image donation-image" src={donation.image_url} alt={donation.food_name} />
+              ) : (
+                <div className="donation-image image-placeholder" aria-hidden="true">FoodBridge</div>
+              )}
+              <div className="donation-card-body">
+                <div className="donation-card-head">
+                  <span className="pill">{donation.category}</span>
+                  <button
+                    type="button"
+                    onClick={() => toggleSave(donation.id)}
+                    className="bookmark-button"
+                    title={savedIds.has(donation.id) ? 'Remove from saved' : 'Save for later'}
+                    aria-pressed={savedIds.has(donation.id)}
+                  >
+                    {savedIds.has(donation.id) ? '♥' : '♡'}
+                  </button>
+                  <span className={`deadline-pill ${isExpiringSoon(donation.pickup_deadline) ? 'urgent' : ''}`}>
+                    {getDeadlineLabel(donation.pickup_deadline)}
+                  </span>
+                </div>
+                <h2>{donation.food_name}</h2>
+                <p>{donation.description || 'No description provided yet.'}</p>
+                <dl className="donation-details">
+                  <div>
+                    <dt>Quantity</dt>
+                    <dd>{donation.quantity}</dd>
+                  </div>
+                  <div>
+                    <dt>Pickup</dt>
+                    <dd>{donation.pickup_location}</dd>
+                  </div>
+                  <div>
+                    <dt>Deadline</dt>
+                    <dd>{formatDeadline(donation.pickup_deadline)}</dd>
+                  </div>
+                </dl>
+                <Link className="button" href={`/donations/${donation.id}`}>View Details</Link>
               </div>
-              <h2>{donation.food_name}</h2>
-              <p>{donation.description || 'No description provided yet.'}</p>
-              <dl className="donation-details">
-                <div>
-                  <dt>Quantity</dt>
-                  <dd>{donation.quantity}</dd>
-                </div>
-                <div>
-                  <dt>Pickup</dt>
-                  <dd>{donation.pickup_location}</dd>
-                </div>
-                <div>
-                  <dt>Deadline</dt>
-                  <dd>{formatDeadline(donation.pickup_deadline)}</dd>
-                </div>
-              </dl>
-              <Link className="button" href={`/donations/${donation.id}`}>View Details</Link>
-            </div>
-          </article>
-        ))}
-      </section>
+            </article>
+          ))}
+        </section>
+      )}
     </main>
   );
 }
+
