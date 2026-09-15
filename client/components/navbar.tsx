@@ -16,6 +16,7 @@ export default function Navbar() {
   const navItems: { label: string; href: string }[] = [
     { label: "Browse", href: "/donations/browse" },
     { label: "🗺️ Map", href: "/map" },
+    { label: "🚚 Rescues", href: "/volunteers" },
     { label: "Saved", href: "/donations/saved" },
     { label: "Impact", href: "/impact" },
     { label: "Reviews", href: "/reviews" },

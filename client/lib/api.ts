@@ -219,6 +219,280 @@ export const INITIAL_REVIEWS: Review[] = [
   },
 ];
 
+export type VehicleType = 'bike' | 'car' | 'van' | 'walk';
+export type MissionUrgency = 'critical' | 'urgent' | 'flexible';
+export type MissionStatus = 'available' | 'assigned' | 'picked_up' | 'in_transit' | 'delivered' | 'cancelled';
+
+export type RescueMission = {
+  id: string;
+  title: string;
+  donor_id: string;
+  donor_name: string;
+  pickup_address: string;
+  recipient_id: string;
+  recipient_name: string;
+  dropoff_address: string;
+  food_category: string;
+  weight_kg: number;
+  vehicle_required: VehicleType;
+  urgency: MissionUrgency;
+  requires_refrigeration: boolean;
+  notes: string;
+  status: MissionStatus;
+  volunteer_id: string | null;
+  volunteer_name: string | null;
+  verification_code: string;
+  pickup_window: string;
+  distance_km: number;
+  est_duration_mins: number;
+  created_at: string;
+  completed_at?: string | null;
+};
+
+export type CourierLeaderboardItem = {
+  id: string;
+  name: string;
+  avatar: string;
+  role: string;
+  vehicle_type: VehicleType;
+  rating: number;
+  completed_missions: number;
+  total_kg_rescued: number;
+  co2_saved_kg: number;
+  badge: string;
+  status: 'active' | 'available' | 'on_mission';
+};
+
+export type RescueStats = {
+  totalMissions: number;
+  availableCount: number;
+  activeCount: number;
+  deliveredCount: number;
+  totalKgRescued: number;
+  co2SavedKg: number;
+  estimatedMealsProvided: number;
+  activeCouriersCount: number;
+};
+
+export type CreateMissionPayload = {
+  title: string;
+  donor_name?: string;
+  pickup_address: string;
+  recipient_name?: string;
+  dropoff_address: string;
+  food_category?: string;
+  weight_kg: number;
+  vehicle_required: VehicleType;
+  urgency: MissionUrgency;
+  requires_refrigeration?: boolean;
+  notes?: string;
+  pickup_window?: string;
+  distance_km?: number;
+};
+
+export const INITIAL_COURIERS: CourierLeaderboardItem[] = [
+  {
+    id: 'vol_alex_1',
+    name: 'Alex Rivera',
+    avatar: '🚴',
+    role: 'Lead Cargo Cyclist',
+    vehicle_type: 'bike',
+    rating: 4.95,
+    completed_missions: 38,
+    total_kg_rescued: 412.5,
+    co2_saved_kg: 98.4,
+    badge: 'Eco-Champion 🌟',
+    status: 'active',
+  },
+  {
+    id: 'vol_sam_2',
+    name: 'Samantha Chen',
+    avatar: '🚗',
+    role: 'Rapid Responder Driver',
+    vehicle_type: 'car',
+    rating: 4.98,
+    completed_missions: 54,
+    total_kg_rescued: 780.0,
+    co2_saved_kg: 172.0,
+    badge: 'Master Courier 🛡️',
+    status: 'on_mission',
+  },
+  {
+    id: 'vol_david_3',
+    name: 'David Kalu',
+    avatar: '🚐',
+    role: 'Heavy Cargo Van Volunteer',
+    vehicle_type: 'van',
+    rating: 4.91,
+    completed_missions: 29,
+    total_kg_rescued: 1240.0,
+    co2_saved_kg: 285.6,
+    badge: 'Heavy Lifter 🏋️',
+    status: 'available',
+  },
+  {
+    id: 'vol_elena_4',
+    name: 'Elena Rostova',
+    avatar: '🚶',
+    role: 'Neighborhood Walking Courier',
+    vehicle_type: 'walk',
+    rating: 5.0,
+    completed_missions: 19,
+    total_kg_rescued: 145.0,
+    co2_saved_kg: 34.8,
+    badge: 'Local Hero ❤️',
+    status: 'available',
+  },
+];
+
+export const INITIAL_MISSIONS: RescueMission[] = [
+  {
+    id: 'mission_1',
+    title: 'Surplus Bakery & Warm Pastries',
+    donor_id: 'user_donor_1',
+    donor_name: 'Green Harvest Bakery',
+    pickup_address: '142 Baker Street, Sector 4',
+    recipient_id: 'user_rec_1',
+    recipient_name: 'Hope Community Shelter',
+    dropoff_address: '88 Peace Avenue, Downtown',
+    food_category: 'Bakery & Bread',
+    weight_kg: 18.5,
+    vehicle_required: 'bike',
+    urgency: 'critical',
+    requires_refrigeration: false,
+    notes: 'Bakery bags are packed and ready by the back kitchen door. Ring buzzer #2.',
+    status: 'available',
+    volunteer_id: null,
+    volunteer_name: null,
+    verification_code: '8392',
+    pickup_window: 'Within 2 hours',
+    distance_km: 2.4,
+    est_duration_mins: 12,
+    created_at: new Date(Date.now() - 3600000 * 1.5).toISOString(),
+    completed_at: null,
+  },
+  {
+    id: 'mission_2',
+    title: 'Chilled Dairy Crates & Fresh Greens',
+    donor_id: 'user_donor_2',
+    donor_name: 'City Fresh Produce Market',
+    pickup_address: '500 Market Square, Dock 3',
+    recipient_id: 'user_rec_2',
+    recipient_name: 'Downtown Youth Center Pantry',
+    dropoff_address: '320 Elm Boulevard, Central',
+    food_category: 'Produce & Dairy',
+    weight_kg: 42.0,
+    vehicle_required: 'car',
+    urgency: 'urgent',
+    requires_refrigeration: true,
+    notes: 'Insulated cooler boxes ready at loading dock 3. Ask for Marco.',
+    status: 'assigned',
+    volunteer_id: 'vol_alex_1',
+    volunteer_name: 'Alex Rivera (Eco-Courier)',
+    verification_code: '4910',
+    pickup_window: 'Today by 5:00 PM',
+    distance_km: 4.8,
+    est_duration_mins: 22,
+    created_at: new Date(Date.now() - 3600000 * 3).toISOString(),
+    completed_at: null,
+  },
+  {
+    id: 'mission_3',
+    title: 'Prepared Hot Catering Trays (Roasted Veggies & Rice)',
+    donor_id: 'user_donor_3',
+    donor_name: 'Sunrise Catering Co.',
+    pickup_address: '77 Banquet Hall Road',
+    recipient_id: 'user_rec_3',
+    recipient_name: 'St. Jude Community Kitchen',
+    dropoff_address: '15 Mission Way, West District',
+    food_category: 'Prepared Meals',
+    weight_kg: 26.0,
+    vehicle_required: 'car',
+    urgency: 'critical',
+    requires_refrigeration: false,
+    notes: 'Food warmers packed in thermal insulated bags. Please transport promptly.',
+    status: 'in_transit',
+    volunteer_id: 'vol_sam_2',
+    volunteer_name: 'Samantha Chen',
+    verification_code: '6125',
+    pickup_window: 'Immediate Rescue',
+    distance_km: 3.1,
+    est_duration_mins: 15,
+    created_at: new Date(Date.now() - 3600000 * 2).toISOString(),
+    completed_at: null,
+  },
+  {
+    id: 'mission_4',
+    title: 'Pantry Staples & Canned Legumes Crates',
+    donor_id: 'user_donor_4',
+    donor_name: 'Metro Grocery Hub',
+    pickup_address: '900 Logistics Way, Bay 12',
+    recipient_id: 'user_rec_4',
+    recipient_name: 'Eastside Food Bank',
+    dropoff_address: '404 Solidarity Road',
+    food_category: 'Pantry & Canned Goods',
+    weight_kg: 75.0,
+    vehicle_required: 'van',
+    urgency: 'flexible',
+    requires_refrigeration: false,
+    notes: 'Heavy crates. Hand truck / dolly recommended. Loading bay has ramp.',
+    status: 'available',
+    volunteer_id: null,
+    volunteer_name: null,
+    verification_code: '2094',
+    pickup_window: 'Anytime before 8:00 PM',
+    distance_km: 6.5,
+    est_duration_mins: 28,
+    created_at: new Date(Date.now() - 3600000 * 6).toISOString(),
+    completed_at: null,
+  },
+  {
+    id: 'mission_5',
+    title: 'Organic Apples & Seasonal Citrus Baskets',
+    donor_id: 'user_donor_2',
+    donor_name: 'City Fresh Produce Market',
+    pickup_address: '500 Market Square, Dock 3',
+    recipient_id: 'user_rec_1',
+    recipient_name: 'Hope Community Shelter',
+    dropoff_address: '88 Peace Avenue, Downtown',
+    food_category: 'Fresh Fruits',
+    weight_kg: 15.0,
+    vehicle_required: 'bike',
+    urgency: 'urgent',
+    requires_refrigeration: false,
+    notes: 'Pre-boxed in 3 light crates. Fits on cargo bike or backpack + panniers.',
+    status: 'delivered',
+    volunteer_id: 'vol_alex_1',
+    volunteer_name: 'Alex Rivera (Eco-Courier)',
+    verification_code: '7721',
+    pickup_window: 'Delivered at 1:30 PM',
+    distance_km: 2.2,
+    est_duration_mins: 10,
+    created_at: new Date(Date.now() - 3600000 * 24).toISOString(),
+    completed_at: new Date(Date.now() - 3600000 * 22).toISOString(),
+  },
+];
+
+const getStoredMissions = (): RescueMission[] => {
+  if (typeof window === 'undefined') return INITIAL_MISSIONS;
+  const stored = localStorage.getItem('foodbridge_rescue_missions');
+  if (!stored) {
+    localStorage.setItem('foodbridge_rescue_missions', JSON.stringify(INITIAL_MISSIONS));
+    return INITIAL_MISSIONS;
+  }
+  try {
+    return JSON.parse(stored);
+  } catch {
+    return INITIAL_MISSIONS;
+  }
+};
+
+const setStoredMissions = (missions: RescueMission[]) => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('foodbridge_rescue_missions', JSON.stringify(missions));
+  }
+};
+
 const getStoredReviews = (): Review[] => {
   if (typeof window === 'undefined') return INITIAL_REVIEWS;
   const stored = localStorage.getItem('foodbridge_reviews');
@@ -550,6 +824,194 @@ export const api = {
     } catch {
       const list = getStoredReviews();
       return computeClientSummary(list);
+    }
+  },
+
+  // Rescue Missions & Courier Logistics API
+  getRescueMissions: async (options?: {
+    status?: string;
+    urgency?: string;
+    vehicle_required?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }) => {
+    try {
+      const queryParams = new URLSearchParams();
+      if (options?.status) queryParams.set('status', options.status);
+      if (options?.urgency) queryParams.set('urgency', options.urgency);
+      if (options?.vehicle_required) queryParams.set('vehicle_required', options.vehicle_required);
+      if (options?.search) queryParams.set('search', options.search);
+      if (options?.page) queryParams.set('page', String(options.page));
+      if (options?.limit) queryParams.set('limit', String(options.limit));
+      const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+
+      const res = await request<{ success: boolean; data: RescueMission[]; pagination?: any }>(
+        `/api/rescues${queryString}`
+      );
+      return res;
+    } catch {
+      let list = getStoredMissions();
+      if (options?.status && options.status !== 'all') {
+        list = list.filter((m) => m.status === options.status);
+      }
+      if (options?.urgency && options.urgency !== 'all') {
+        list = list.filter((m) => m.urgency === options.urgency);
+      }
+      if (options?.vehicle_required && options.vehicle_required !== 'all') {
+        list = list.filter((m) => m.vehicle_required === options.vehicle_required);
+      }
+      if (options?.search) {
+        const q = options.search.toLowerCase();
+        list = list.filter(
+          (m) =>
+            m.title.toLowerCase().includes(q) ||
+            m.donor_name.toLowerCase().includes(q) ||
+            m.recipient_name.toLowerCase().includes(q) ||
+            m.food_category.toLowerCase().includes(q)
+        );
+      }
+      return { success: true, data: list };
+    }
+  },
+
+  getRescueStats: async (): Promise<RescueStats> => {
+    try {
+      const res = await request<{ success: boolean; data: RescueStats }>('/api/rescues/stats');
+      return res.data;
+    } catch {
+      const missions = getStoredMissions();
+      const delivered = missions.filter((m) => m.status === 'delivered');
+      const active = missions.filter((m) => ['assigned', 'picked_up', 'in_transit'].includes(m.status));
+      const available = missions.filter((m) => m.status === 'available');
+      const totalKg = missions
+        .filter((m) => m.status === 'delivered' || m.status === 'in_transit' || m.status === 'picked_up')
+        .reduce((sum, m) => sum + (m.weight_kg || 0), 0);
+
+      return {
+        totalMissions: missions.length,
+        availableCount: available.length,
+        activeCount: active.length,
+        deliveredCount: delivered.length,
+        totalKgRescued: Number(totalKg.toFixed(1)),
+        co2SavedKg: Number((totalKg * 2.5).toFixed(1)),
+        estimatedMealsProvided: Math.round(totalKg * 2.2),
+        activeCouriersCount: 8,
+      };
+    }
+  },
+
+  getCouriersLeaderboard: async (): Promise<CourierLeaderboardItem[]> => {
+    try {
+      const res = await request<{ success: boolean; data: CourierLeaderboardItem[] }>('/api/rescues/leaderboard');
+      return res.data;
+    } catch {
+      return INITIAL_COURIERS;
+    }
+  },
+
+  createRescueMission: async (payload: CreateMissionPayload) => {
+    try {
+      const res = await request<{ success: boolean; data: RescueMission }>('/api/rescues', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+      if (res.data) {
+        const list = getStoredMissions();
+        list.unshift(res.data);
+        setStoredMissions(list);
+      }
+      return res.data;
+    } catch {
+      const newMission: RescueMission = {
+        id: `mission_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        title: payload.title,
+        donor_id: 'current_user',
+        donor_name: payload.donor_name || 'Community Donor Partner',
+        pickup_address: payload.pickup_address,
+        recipient_id: 'rec_shelter',
+        recipient_name: payload.recipient_name || 'Downtown Hope Kitchen',
+        dropoff_address: payload.dropoff_address,
+        food_category: payload.food_category || 'Surplus Food Boxes',
+        weight_kg: Number(payload.weight_kg) || 12,
+        vehicle_required: payload.vehicle_required || 'bike',
+        urgency: payload.urgency || 'urgent',
+        requires_refrigeration: Boolean(payload.requires_refrigeration),
+        notes: payload.notes || '',
+        status: 'available',
+        volunteer_id: null,
+        volunteer_name: null,
+        verification_code: Math.floor(1000 + Math.random() * 9000).toString(),
+        pickup_window: payload.pickup_window || 'Next 2-3 hours',
+        distance_km: Number(payload.distance_km) || 3.2,
+        est_duration_mins: Math.round((Number(payload.distance_km) || 3.2) * 5),
+        created_at: new Date().toISOString(),
+        completed_at: null,
+      };
+      const list = getStoredMissions();
+      list.unshift(newMission);
+      setStoredMissions(list);
+      return newMission;
+    }
+  },
+
+  claimRescueMission: async (missionId: string, volunteerName: string = 'Alex (You)') => {
+    try {
+      const res = await request<{ success: boolean; data: RescueMission }>(`/api/rescues/${missionId}/claim`, {
+        method: 'POST',
+        body: JSON.stringify({ volunteer_name: volunteerName }),
+      });
+      if (res.data) {
+        const list = getStoredMissions().map((m) => (m.id === missionId ? res.data : m));
+        setStoredMissions(list);
+      }
+      return res.data;
+    } catch {
+      const list = getStoredMissions();
+      const mission = list.find((m) => m.id === missionId);
+      if (mission) {
+        mission.status = 'assigned';
+        mission.volunteer_id = 'current_user';
+        mission.volunteer_name = volunteerName;
+        setStoredMissions([...list]);
+        return mission;
+      }
+      throw new Error('Mission not found');
+    }
+  },
+
+  updateRescueStatus: async (
+    missionId: string,
+    status: MissionStatus,
+    notes?: string,
+    verificationCode?: string
+  ) => {
+    try {
+      const res = await request<{ success: boolean; data: RescueMission }>(`/api/rescues/${missionId}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status, notes, verification_code: verificationCode }),
+      });
+      if (res.data) {
+        const list = getStoredMissions().map((m) => (m.id === missionId ? res.data : m));
+        setStoredMissions(list);
+      }
+      return res.data;
+    } catch {
+      const list = getStoredMissions();
+      const mission = list.find((m) => m.id === missionId);
+      if (mission) {
+        if (status === 'delivered' && verificationCode && mission.verification_code) {
+          if (verificationCode.trim() !== mission.verification_code.trim()) {
+            throw new Error('Invalid PIN code');
+          }
+        }
+        mission.status = status;
+        if (notes) mission.notes = notes;
+        if (status === 'delivered') mission.completed_at = new Date().toISOString();
+        setStoredMissions([...list]);
+        return mission;
+      }
+      throw new Error('Mission not found');
     }
   },
 };
