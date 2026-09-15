@@ -10,6 +10,7 @@ const donationRoutes = require('./routes/donationRoutes');
 const claimRoutes = require('./routes/claimRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
+const rescueRoutes = require('./routes/rescueRoutes');
 const { version } = require('./package.json');
 
 const app = express();
@@ -79,6 +80,7 @@ app.use('/api/donations', donationRoutes);
 app.use('/api/claims', claimRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/rescues', rescueRoutes);
 
 // 404 handler
 app.use((req, res) => {
