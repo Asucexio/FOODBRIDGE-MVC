@@ -3,6 +3,8 @@
 import { useEffect, useState, useMemo } from "react";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
+import RescueRouteSimulator from "@/components/rescue-route-simulator";
+import VolunteerPassportModal from "@/components/volunteer-passport-modal";
 import {
   api,
   RescueMission,
@@ -42,6 +44,9 @@ import {
   X,
   RefreshCw,
   TrendingUp,
+  BadgeCheck,
+  Radio,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -114,9 +119,27 @@ export default function VolunteersPage() {
   // Modals & Active Mission
   const [activeMissionModal, setActiveMissionModal] = useState<RescueMission | null>(null);
   const [showDispatchModal, setShowDispatchModal] = useState(false);
+  const [showPassportModal, setShowPassportModal] = useState(false);
+  const [expandedSimulatorId, setExpandedSimulatorId] = useState<string | null>(null);
   const [verificationInputPin, setVerificationInputPin] = useState("");
   const [statusActionLoading, setStatusActionLoading] = useState(false);
   const [actionMessage, setActionMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  // Flash Rescue Countdown Timer
+  const [flashSeconds, setFlashSeconds] = useState(2700); // 45 mins countdown
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setFlashSeconds((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatFlashTime = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}:${s < 10 ? "0" : ""}${s}`;
+  };
 
   // Volunteer Courier Mode
   const [myVehicle, setMyVehicle] = useState<VehicleType>("bike");
@@ -198,7 +221,6 @@ export default function VolunteersPage() {
         type: "success",
         text: `Mission accepted! Head to ${updated.pickup_address} for pickup.`,
       });
-      // Refresh stats
       const newStats = await api.getRescueStats();
       setStats(newStats);
     } catch (err: any) {
@@ -269,7 +291,6 @@ export default function VolunteersPage() {
         type: "success",
         text: `Rescue mission "${newMission.title}" dispatched! Nearby couriers have been alerted.`,
       });
-      // reset form
       setDispatchForm({
         title: "",
         donor_name: "",
@@ -299,7 +320,7 @@ export default function VolunteersPage() {
       <Navbar />
 
       <main className="container mx-auto max-w-7xl px-4 pt-28 pb-16">
-        {/* Banner Alert if any */}
+        {/* Banner Alert */}
         {actionMessage && (
           <div
             className={`mb-6 p-4 rounded-xl flex items-center justify-between border shadow-sm transition-all ${
@@ -326,7 +347,7 @@ export default function VolunteersPage() {
         )}
 
         {/* Hero Section */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-800 via-teal-800 to-emerald-950 text-white p-8 md:p-12 shadow-2xl mb-10 border border-emerald-700/40">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-800 via-teal-800 to-emerald-950 text-white p-8 md:p-12 shadow-2xl mb-8 border border-emerald-700/40">
           <div className="absolute -right-16 -bottom-16 w-80 h-80 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute right-20 top-8 opacity-15 hidden lg:block">
             <Bike className="w-64 h-64 text-white" />
@@ -350,20 +371,58 @@ export default function VolunteersPage() {
                 className="bg-amber-400 hover:bg-amber-300 text-emerald-950 font-bold px-6 py-2.5 rounded-xl shadow-lg transition-transform active:scale-95 flex items-center gap-2"
               >
                 <PlusCircle className="h-5 w-5" />
-                Dispatch New Rescue Mission
+                Dispatch New Rescue Run
               </Button>
+
               <Button
-                variant="outline"
-                onClick={() => {
-                  const element = document.getElementById("mission-board");
-                  element?.scrollIntoView({ behavior: "smooth" });
-                }}
-                className="bg-white/10 hover:bg-white/20 border-white/30 text-white font-medium px-5 py-2.5 rounded-xl backdrop-blur-sm"
+                onClick={() => setShowPassportModal(true)}
+                className="bg-white/10 hover:bg-white/20 border border-white/30 text-white font-medium px-5 py-2.5 rounded-xl backdrop-blur-sm flex items-center gap-2"
               >
-                Browse Available Runs
-                <ChevronRight className="h-4 w-4 ml-1" />
+                <BadgeCheck className="h-5 w-5 text-amber-300" />
+                My Courier Passport & ID
               </Button>
             </div>
+          </div>
+        </div>
+
+        {/* Live Emergency Flash Rescue Broadcast Banner */}
+        <div className="bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 text-white rounded-2xl p-4 md:p-5 shadow-lg mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative overflow-hidden border border-red-400/40">
+          <div className="absolute right-0 top-0 bottom-0 opacity-10 flex items-center pr-6 pointer-events-none">
+            <Radio className="w-32 h-32 text-white animate-pulse" />
+          </div>
+
+          <div className="flex items-start md:items-center gap-3.5 z-10">
+            <div className="p-2.5 rounded-xl bg-white/20 backdrop-blur-sm shrink-0 mt-0.5 md:mt-0">
+              <Zap className="h-6 w-6 text-amber-200 animate-bounce" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="bg-black/30 text-amber-300 text-[11px] font-extrabold px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-red-400 animate-ping" />
+                  Flash Rescue Alert
+                </span>
+                <span className="text-xs font-mono font-bold bg-white/20 px-2 py-0.5 rounded">
+                  ⏳ Expires in {formatFlashTime(flashSeconds)}
+                </span>
+              </div>
+              <h3 className="text-base font-bold mt-1">
+                Hot Artisan Sourdough & 30 Fresh Soups Ready for Immediate Rescue
+              </h3>
+              <p className="text-xs text-red-100">
+                Green Harvest Bakery (142 Baker St) &rarr; Hope Community Shelter (88 Peace Ave) • ~18.5 kg
+              </p>
+            </div>
+          </div>
+
+          <div className="z-10 shrink-0 w-full md:w-auto">
+            <Button
+              onClick={() => handleClaimMission("mission_1")}
+              disabled={statusActionLoading}
+              className="w-full md:w-auto bg-white text-red-700 hover:bg-red-50 font-extrabold px-5 py-2.5 rounded-xl shadow-md flex items-center justify-center gap-2"
+            >
+              <Bike className="h-4 w-4" />
+              Claim Flash Run
+            </Button>
           </div>
         </div>
 
@@ -597,6 +656,7 @@ export default function VolunteersPage() {
                   const status = statusConfig[mission.status] || statusConfig.available;
                   const VehicleIcon = vehicle.icon;
                   const UrgencyIcon = urgency.icon;
+                  const isSimulatorOpen = expandedSimulatorId === mission.id;
 
                   return (
                     <div
@@ -694,6 +754,13 @@ export default function VolunteersPage() {
                         </p>
                       )}
 
+                      {/* Expandable Live Route Simulator */}
+                      {isSimulatorOpen && (
+                        <div className="mb-4">
+                          <RescueRouteSimulator mission={mission} />
+                        </div>
+                      )}
+
                       {/* Footer Actions */}
                       <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-border/50">
                         <div className="text-xs text-muted-foreground">
@@ -709,6 +776,16 @@ export default function VolunteersPage() {
                         </div>
 
                         <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setExpandedSimulatorId(isSimulatorOpen ? null : mission.id)}
+                            className="text-xs h-8 px-2.5 text-muted-foreground hover:text-foreground"
+                          >
+                            <Compass className="h-3.5 w-3.5 mr-1 text-emerald-600" />
+                            {isSimulatorOpen ? "Hide Radar" : "🗺️ Route Radar"}
+                          </Button>
+
                           {mission.status === "available" ? (
                             <Button
                               onClick={() => handleClaimMission(mission.id)}
@@ -737,7 +814,7 @@ export default function VolunteersPage() {
             )}
           </div>
 
-          {/* Sidebar (Leaderboard, Guide, Courier Perks) */}
+          {/* Sidebar (Leaderboard, Guide, Eco Calculator) */}
           <div className="space-y-6">
             {/* Top Volunteer Couriers Leaderboard */}
             <div className="bg-card border border-border/70 rounded-2xl p-5 shadow-sm">
@@ -748,7 +825,12 @@ export default function VolunteersPage() {
                     Courier Honor Roll
                   </h3>
                 </div>
-                <span className="text-xs font-semibold text-muted-foreground">Top Rescuers</span>
+                <button
+                  onClick={() => setShowPassportModal(true)}
+                  className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold hover:underline"
+                >
+                  View Passport
+                </button>
               </div>
 
               <div className="space-y-3.5">
@@ -813,10 +895,10 @@ export default function VolunteersPage() {
         </div>
       </main>
 
-      {/* Active Mission Route & Handover Modal */}
+      {/* Active Mission Route & Handover Modal with Embedded Simulator */}
       {activeMissionModal && (
         <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-card border border-border w-full max-w-xl rounded-3xl p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+          <div className="bg-card border border-border w-full max-w-2xl rounded-3xl p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => {
                 setActiveMissionModal(null);
@@ -875,31 +957,9 @@ export default function VolunteersPage() {
               })}
             </div>
 
-            {/* Waypoints Card */}
-            <div className="bg-muted/40 rounded-2xl p-4 border border-border/50 space-y-3 mb-6">
-              <div className="flex items-start gap-3">
-                <span className="w-3 h-3 rounded-full bg-emerald-600 mt-1 shrink-0" />
-                <div>
-                  <p className="text-xs font-bold text-muted-foreground uppercase">Pickup Location</p>
-                  <p className="font-bold text-sm text-foreground">{activeMissionModal.donor_name}</p>
-                  <p className="text-xs text-muted-foreground">{activeMissionModal.pickup_address}</p>
-                </div>
-              </div>
-
-              <div className="border-l-2 border-dashed border-border ml-1.5 pl-4 py-1">
-                <p className="text-xs text-muted-foreground">
-                  Distance: <strong>{activeMissionModal.distance_km} km</strong> (~{activeMissionModal.est_duration_mins} mins)
-                </p>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <span className="w-3 h-3 rounded-full bg-amber-600 mt-1 shrink-0" />
-                <div>
-                  <p className="text-xs font-bold text-muted-foreground uppercase">Dropoff Location</p>
-                  <p className="font-bold text-sm text-foreground">{activeMissionModal.recipient_name}</p>
-                  <p className="text-xs text-muted-foreground">{activeMissionModal.dropoff_address}</p>
-                </div>
-              </div>
+            {/* Embedded Live Route Simulator */}
+            <div className="mb-6">
+              <RescueRouteSimulator mission={activeMissionModal} />
             </div>
 
             {/* Handover PIN Section if Delivering */}
@@ -1144,6 +1204,11 @@ export default function VolunteersPage() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Volunteer Courier Digital Passport Modal */}
+      {showPassportModal && (
+        <VolunteerPassportModal onClose={() => setShowPassportModal(false)} />
       )}
 
       <Footer />
